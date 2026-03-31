@@ -39,7 +39,9 @@ export default function StepComplete({ data }: StepCompleteProps) {
       const userId = user.id;
       const sanitizedName = sanitizeText(data.name, 50);
 
-      const { error: userError } = await supabase.from('users').update({
+      const { error: userError } = await supabase.from('users').upsert({
+        id: userId,
+        email: user.email!,
         name: sanitizedName,
         primary_currency: data.currency,
         financial_month_start_day: data.payDay,
@@ -48,7 +50,7 @@ export default function StepComplete({ data }: StepCompleteProps) {
         zakat_anniversary_date: data.zakatDate || null,
         onboarding_completed: true,
         updated_at: new Date().toISOString(),
-      }).eq('id', userId);
+      }, { onConflict: 'id' });
 
       if (userError) {
         setError(`Failed to update profile: ${userError.message}`);

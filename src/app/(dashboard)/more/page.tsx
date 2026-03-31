@@ -23,6 +23,7 @@ export default function MorePage() {
     setSigningOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
+    router.refresh();
     router.replace('/signin');
   };
 

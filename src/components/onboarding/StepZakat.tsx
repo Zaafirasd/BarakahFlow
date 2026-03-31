@@ -17,7 +17,7 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
 
   useEffect(() => {
     if (contentRef.current) {
-      setContentHeight(contentRef.current.scrollHeight);
+      setContentHeight(contentRef.current.offsetHeight);
     }
   }, []);
 
