@@ -31,29 +31,37 @@ export default function BalanceCard({ transactions, currency }: BalanceCardProps
         <Wallet className="h-5 w-5 text-slate-400" />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <div className="flex flex-col rounded-2xl bg-slate-100/80 px-2 py-3 text-center dark:bg-white/5">
-          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 leading-tight">Income</span>
-          <p className="mt-1.5 text-sm font-extrabold leading-tight text-slate-900 dark:text-white tabular-nums">
-            {Math.floor(income).toLocaleString()}
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+            Net Cash Flow
+          </span>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className={`text-4xl font-black tracking-tight ${net >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-500'}`}>
+              {net >= 0 ? '+' : ''}{Math.floor(net).toLocaleString()}
+            </span>
+            <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{currency}</span>
+          </div>
+          <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            {net >= 0 ? 'You have saved more than you spent' : 'Caution: Monthly spending exceeds income'}
           </p>
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider font-mono">{currency}</p>
         </div>
 
-        <div className="flex flex-col rounded-2xl bg-slate-100/80 px-2 py-3 text-center dark:bg-white/5">
-          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 leading-tight">Spend</span>
-          <p className="mt-1.5 text-sm font-extrabold leading-tight text-slate-900 dark:text-white tabular-nums">
-            {Math.floor(expenses).toLocaleString()}
-          </p>
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider font-mono">{currency}</p>
-        </div>
-
-        <div className="flex flex-col rounded-2xl bg-slate-100/80 px-2 py-3 text-center dark:bg-white/5">
-          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 leading-tight">Net</span>
-          <p className={`mt-1.5 text-sm font-extrabold leading-tight tabular-nums ${net >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-            {net >= 0 ? '+' : ''}{Math.floor(net).toLocaleString()}
-          </p>
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider font-mono">{currency}</p>
+        <div className="flex items-center gap-4 rounded-2xl bg-slate-100/50 p-4 dark:bg-white/5">
+          <div className="flex flex-1 flex-col border-r border-slate-200 dark:border-white/10">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Income</span>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <TrendingUp className="h-3 w-3 text-emerald-500" />
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.floor(income).toLocaleString()}</span>
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Spending</span>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <TrendingDown className="h-3 w-3 text-rose-400" />
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.floor(expenses).toLocaleString()}</span>
+            </div>
+          </div>
         </div>
       </div>
     </Card>

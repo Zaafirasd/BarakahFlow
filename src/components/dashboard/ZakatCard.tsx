@@ -26,20 +26,31 @@ export default function ZakatCard({ zakatDate, balance, currency, estimate }: Za
 
   return (
     <Card className="border border-white/70 bg-white/82 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_50px_rgba(0,0,0,0.32)]">
-      <div className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
-          <Moon className="h-7 w-7 fill-emerald-600 dark:fill-emerald-300" />
-        </div>
-        <div className="flex flex-col gap-1.5 pt-0.5">
-          <div className="flex items-center gap-2.5">
-            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
-              Zakat
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+              Estimated Zakat
             </span>
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">DUE IN {days} DAYS</span>
           </div>
-          <p className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            {Math.floor(zakatEstimate).toLocaleString()} <span className="text-sm font-bold text-slate-400 dark:text-slate-500">{currency}</span>
+          
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              {Math.floor(zakatEstimate).toLocaleString()}
+            </span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+              {currency}
+            </span>
+          </div>
+          
+          <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Due in {days} days
           </p>
+        </div>
+
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+          <Moon className="h-6 w-6 fill-current" />
         </div>
       </div>
     </Card>

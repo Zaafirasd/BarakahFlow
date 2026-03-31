@@ -36,39 +36,49 @@ export default function BudgetCard({ budgets, transactions, currency, startDay }
   return (
     <button type="button" onClick={() => router.push('/budget')} className="block w-full text-left">
       <Card className="border border-white/70 bg-white/82 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-transform hover:-translate-y-0.5 dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_50px_rgba(0,0,0,0.32)]">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-6">
           <div className="min-w-0 flex-1">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
-                Budget
-              </div>
-              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">{budgets.length > 0 ? 'ON TRACK' : 'NOT SET'}</span>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                Monthly Budget
+              </span>
             </div>
 
             {budgets.length === 0 ? (
-              <>
-                <p className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">Plan your month</p>
-                <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Tap to set budget limits.</p>
-              </>
+              <div className="mt-4">
+                <p className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">Plan your month</p>
+                <p className="mt-1 text-[13px] font-medium text-slate-500 dark:text-slate-400">Tap to set budget limits</p>
+              </div>
             ) : (
-              <>
-                <p className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  {Math.floor(totalSpent).toLocaleString()} of {Math.floor(totalBudgeted).toLocaleString()} <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{currency}</span>
-                </p>
-                <p className="mt-1.5 flex items-center gap-1.5 text-[13px] font-bold text-slate-500 dark:text-slate-400">
-                  <span className="text-emerald-500 dark:text-emerald-400">{Math.floor(remaining).toLocaleString()} {currency}</span> left for {daysLeft} days
-                </p>
-              </>
+              <div className="mt-4">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {Math.floor(totalSpent).toLocaleString()}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+                    / {Math.floor(totalBudgeted).toLocaleString()} {currency}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {Math.floor(remaining).toLocaleString()} {currency} left
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                    in {daysLeft} days
+                  </span>
+                </div>
+              </div>
             )}
           </div>
 
           {budgets.length > 0 ? (
-            <div className="flex flex-col items-center gap-1.5 translate-y-1">
-              <BudgetRing percentage={percentage} size={84} strokeWidth={8} />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">View details</span>
+            <div className="flex flex-shrink-0 flex-col items-center gap-2">
+              <BudgetRing percentage={percentage} size={76} strokeWidth={7} topLabel="" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">Usage</span>
             </div>
           ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 dark:bg-white/5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 dark:bg-white/5 transition-colors group-hover:bg-slate-200 dark:group-hover:bg-white/10">
               <ChevronRight className="h-5 w-5 text-slate-400" />
             </div>
           )}
