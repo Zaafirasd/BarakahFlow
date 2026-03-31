@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import type { OnboardingData } from '@/types';
 
@@ -56,27 +56,38 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
         </div>
       </div>
 
-      {data.zakatEnabled && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Zakat anniversary date
-          </label>
-          <p className="text-xs text-slate-500 dark:text-slate-500">
-            When did you first become eligible for Zakat? If unsure, use today&apos;s date.
-          </p>
-          <input
-            type="date"
-            value={data.zakatDate || ''}
-            onChange={(e) => updateData({ zakatDate: e.target.value })}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
-            id="onboarding-zakat-date"
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {data.zakatEnabled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden space-y-3"
+          >
+            <div className="space-y-2 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-6">
+              <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">
+                Zakat anniversary date
+              </label>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-4 leading-relaxed">
+                When did you first become eligible for Zakat? If unsure, use today&apos;s date.
+              </p>
+              <input
+                type="date"
+                value={data.zakatDate || ''}
+                onChange={(e) => updateData({ zakatDate: e.target.value })}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
+                id="onboarding-zakat-date"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <Button onClick={onNext} fullWidth size="lg">
-        Continue
-      </Button>
+      <div className="pt-4">
+        <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
+          Continue
+        </Button>
+      </div>
     </div>
   );
 }
