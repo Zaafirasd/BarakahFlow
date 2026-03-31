@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import AppThemeProvider from "@/components/providers/AppThemeProvider";
 import "./globals.css";
 
@@ -43,7 +44,10 @@ export default function RootLayout({
         className="font-sans antialiased min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white"
         suppressHydrationWarning
       >
-        <AppThemeProvider>{children}</AppThemeProvider>
+        <AppThemeProvider>
+          {children}
+          <SpeedInsights />
+        </AppThemeProvider>
       </body>
     </html>
   );
