@@ -38,7 +38,7 @@ export default function BalanceCard({ transactions, currency }: BalanceCardProps
           </span>
           <div className="mt-1 flex items-baseline gap-2">
             <span className={`text-4xl font-black tracking-tight ${net >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-500'}`}>
-              {net >= 0 ? '+' : ''}{Math.floor(net).toLocaleString()}
+              {net >= 0 ? '+' : '-'}{Math.floor(Math.abs(net)).toLocaleString('en-US')}
             </span>
             <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{currency}</span>
           </div>
@@ -52,14 +52,14 @@ export default function BalanceCard({ transactions, currency }: BalanceCardProps
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Income</span>
             <div className="mt-0.5 flex items-center gap-1.5">
               <TrendingUp className="h-3 w-3 text-emerald-500" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.floor(income).toLocaleString()}</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.floor(income).toLocaleString('en-US')}</span>
             </div>
           </div>
           <div className="flex flex-1 flex-col">
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Spending</span>
             <div className="mt-0.5 flex items-center gap-1.5">
               <TrendingDown className="h-3 w-3 text-rose-400" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.floor(expenses).toLocaleString()}</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.floor(expenses).toLocaleString('en-US')}</span>
             </div>
           </div>
         </div>

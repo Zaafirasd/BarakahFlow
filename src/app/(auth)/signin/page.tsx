@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -12,8 +12,11 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const passwordReset = searchParams.get('reset') === 'success';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -88,6 +91,12 @@ export default function SignInPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Welcome back</p>
           </div>
 
+          {passwordReset && (
+            <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+              Password updated — please sign in with your new password.
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSignIn} className="space-y-4">
             <Input
@@ -116,6 +125,12 @@ export default function SignInPage() {
               </div>
             )}
 
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-xs font-medium text-slate-400 hover:text-emerald-500 transition-colors dark:text-slate-500">
+                Forgot password?
+              </Link>
+            </div>
+
             <Button type="submit" fullWidth loading={loading} size="lg">
               Sign In
             </Button>
@@ -130,5 +145,13 @@ export default function SignInPage() {
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInForm />
+    </Suspense>
   );
 }

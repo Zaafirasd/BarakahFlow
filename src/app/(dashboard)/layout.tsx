@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ArrowLeftRight, Plus, PieChart, Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
+import OfflineBanner from '@/components/ui/OfflineBanner';
 
 const tabs = [
   { name: 'Home', icon: LayoutDashboard, href: '/dashboard' },
@@ -24,6 +25,7 @@ export default function DashboardLayout({
 
   return (
     <div className={`min-h-screen ${isAddTransaction ? '' : 'pb-24'}`}>
+      <OfflineBanner />
       {/* Page Content */}
       {children}
 

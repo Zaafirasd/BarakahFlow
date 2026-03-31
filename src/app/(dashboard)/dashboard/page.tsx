@@ -54,9 +54,11 @@ export default function DashboardPage() {
           // Check for local gold fallback
           let localGold = 0;
           if (typeof window !== 'undefined') {
-            const storedGold = localStorage.getItem(`barakahflow_gold_${profile.id}`);
-            if (storedGold) {
-              localGold = parseFloat(storedGold) || 0;
+            try {
+              const storedGold = localStorage.getItem(`barakahflow_gold_${profile.id}`);
+              if (storedGold) localGold = parseFloat(storedGold) || 0;
+            } catch {
+              // localStorage unavailable (e.g. private browsing restrictions)
             }
           }
 

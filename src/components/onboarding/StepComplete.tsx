@@ -23,7 +23,6 @@ export default function StepComplete({ data }: StepCompleteProps) {
   const [error, setError] = useState('');
 
   const handleSave = async () => {
-    console.log('Final onboarding data:', data);
     setLoading(true);
     setError('');
 

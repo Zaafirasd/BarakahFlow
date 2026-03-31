@@ -1,6 +1,7 @@
 import type { Account, Transaction } from '@/types';
 
 export const NISAB_ESTIMATE_AED = 18500;
+export const ZAKAT_RATE = 0.025; // 2.5% — update annually if needed
 export const ZAKAT_LOCAL_STORAGE_PREFIX = 'barakaflow:zakat-calculation';
 
 export interface ZakatInputs {
@@ -75,7 +76,7 @@ export function calculateZakat(cashAndBankBalance: number, inputs: ZakatInputs):
   const deductions = inputs.debtsDue + inputs.essentialExpenses;
   const netZakatable = totalAssets - deductions;
   const aboveNisab = netZakatable >= NISAB_ESTIMATE_AED;
-  const zakatDue = aboveNisab ? netZakatable * 0.025 : 0;
+  const zakatDue = aboveNisab ? netZakatable * ZAKAT_RATE : 0;
 
   return {
     totalAssets,

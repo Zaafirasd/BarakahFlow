@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, LogOut, MoonStar, ReceiptText, UserRound } from 'lucide-react';
+import { ChevronRight, LogOut, MoonStar, ReceiptText, Shield, UserRound } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import PageTransition from '@/components/ui/PageTransition';
@@ -12,6 +12,7 @@ const menuItems = [
   { label: 'Bills', href: '/bills', icon: ReceiptText },
   { label: 'Zakat', href: '/zakat', icon: MoonStar },
   { label: 'Profile', href: '/profile', icon: UserRound },
+  { label: 'Privacy Policy', href: '/privacy-policy', icon: Shield },
 ];
 
 export default function MorePage() {

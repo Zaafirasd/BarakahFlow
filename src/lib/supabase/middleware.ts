@@ -39,7 +39,7 @@ export const updateSession = async (request: NextRequest) => {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const publicRoutes = ["/signin", "/signup"];
+  const publicRoutes = ["/signin", "/signup", "/forgot-password", "/reset-password", "/privacy-policy"];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // If signed in, check onboarding status

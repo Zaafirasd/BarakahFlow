@@ -36,7 +36,10 @@ interface FormErrors {
 function TransactionsPageContent() {
   const searchParams = useSearchParams();
   const monthParam = searchParams.get('month');
-  const categoryFilter = searchParams.get('category');
+  const rawCategoryFilter = searchParams.get('category');
+  // Only pass category filter if it looks like a valid UUID (prevents malformed query params)
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const categoryFilter = rawCategoryFilter && UUID_RE.test(rawCategoryFilter) ? rawCategoryFilter : null;
   const parsedMonth = monthParam ? new Date(monthParam) : undefined;
   const referenceDate = parsedMonth && !Number.isNaN(parsedMonth.getTime()) ? parsedMonth : undefined;
 
@@ -71,7 +74,8 @@ function TransactionsPageContent() {
       .gte('date', start.toISOString().split('T')[0])
       .lte('date', end.toISOString().split('T')[0])
       .order('date', { ascending: false })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
 
     if (categoryFilter) query = query.eq('category_id', categoryFilter);
 
@@ -168,10 +172,14 @@ function TransactionsPageContent() {
     if (!selectedTx) return;
     setDeleting(true);
     const supabase = createClient();
-    await supabase.from('transactions').delete().eq('id', selectedTx.id);
+    const { error } = await supabase.from('transactions').delete().eq('id', selectedTx.id);
+    setDeleting(false);
+    if (error) {
+      setFormErrors({ amount: error.message });
+      return;
+    }
     setSelectedTx(null);
     setShowDelete(false);
-    setDeleting(false);
     trackEvent(METRICS.TRANSACTION_DELETED);
     fetchTransactions();
   };
