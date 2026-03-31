@@ -49,16 +49,10 @@ export const updateSession = async (request: NextRequest) => {
   const isPublicInfoRoute = publicInfoRoutes.includes(pathname);
   const isPublicRoute = isAuthRoute || isPublicInfoRoute;
 
-  // If signed in, check onboarding status
-  let onboardingCompleted = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("onboarding_completed")
-      .eq("id", user.id)
-      .single();
-    onboardingCompleted = !!profile?.onboarding_completed;
-  }
+  // If signed in, check onboarding status via fast cookie check
+  // This avoids a DB query on every single navigation, fixing the 5s delay.
+  const onboardingCookie = request.cookies.get("bf_onboarding_done");
+  const onboardingCompleted = !!onboardingCookie;
 
   // Root redirect logic
   if (pathname === "/") {

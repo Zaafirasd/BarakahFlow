@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ArrowLeftRight, Plus, PieChart, Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -23,6 +24,13 @@ export default function DashboardLayout({
 
   const isAddTransaction = pathname === '/add-transaction';
 
+  useEffect(() => {
+    // Re-sync onboarding cookie for existing users to ensure snappy navigation
+    if (typeof document !== 'undefined' && !document.cookie.includes('bf_onboarding_done')) {
+      document.cookie = "bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax";
+    }
+  }, []);
+
   return (
     <div className={`min-h-screen ${isAddTransaction ? '' : 'pb-24'}`}>
       <OfflineBanner />
@@ -41,6 +49,7 @@ export default function DashboardLayout({
                 return (
                   <div key={tab.name} className="flex justify-center">
                     <motion.button
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => router.push(tab.href)}
                       className="flex h-14 w-14 -mt-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg shadow-slate-900/20 transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:shadow-black/30 dark:hover:bg-slate-100"

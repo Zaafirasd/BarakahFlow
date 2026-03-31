@@ -199,11 +199,11 @@ export default function StepComplete({ data }: StepCompleteProps) {
       }
 
       // Track aggregate events anonymously
-      trackEvent(METRICS.ONBOARDING_COMPLETED);
-      if (data.zakatEnabled) trackEvent(METRICS.ZAKAT_ENABLED);
-      if (data.budgetChoice === 'auto') trackEvent(METRICS.BUDGET_CREATED);
       if (data.bills.length > 0) trackEvent(METRICS.BILL_ADDED);
-
+      
+      // OPTIMIZATION: Set onboarding completion cookie for FAST middleware checks (fixes the 5s delay)
+      document.cookie = "bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax";
+      
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
