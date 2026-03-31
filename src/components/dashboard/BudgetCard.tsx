@@ -52,20 +52,22 @@ export default function BudgetCard({ budgets, transactions, currency, startDay }
               </div>
             ) : (
               <div className="mt-4">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                <div className="flex flex-col">
+                  <span className="text-[2.25rem] font-black tracking-[-0.04em] text-slate-900 dark:text-white leading-none">
                     {formatCurrency(totalSpent, currency)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 leading-none">
-                    / {formatCurrency(totalBudgeted, currency)}
+                  <span className="mt-1 text-xs font-bold text-slate-400 dark:text-slate-500">
+                    out of {formatCurrency(totalBudgeted, currency)}
                   </span>
                 </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     {formatCurrency(remaining, currency)} left
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                    in {daysLeft} days
+                  </div>
+                  <span className="text-[11px] font-bold tracking-tight text-slate-400 dark:text-slate-500">
+                    Reset in {daysLeft} days
                   </span>
                 </div>
               </div>
@@ -73,9 +75,11 @@ export default function BudgetCard({ budgets, transactions, currency, startDay }
           </div>
 
           {budgets.length > 0 ? (
-            <div className="flex flex-shrink-0 flex-col items-center gap-2">
-              <BudgetRing percentage={percentage} size={76} strokeWidth={7} topLabel="" />
-              <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">Usage</span>
+            <div className="flex flex-shrink-0 flex-col items-center gap-2 pr-1">
+              <BudgetRing percentage={percentage} size={84} strokeWidth={8} topLabel="" />
+              <span className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                Usage
+              </span>
             </div>
           ) : (
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 dark:bg-white/5 transition-colors group-hover:bg-slate-200 dark:group-hover:bg-white/10">
