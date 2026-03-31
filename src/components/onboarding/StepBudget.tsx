@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
+import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import Button from '@/components/ui/Button';
 import type { OnboardingData } from '@/types';
 
@@ -94,10 +95,12 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ type: 'spring', damping: 30, stiffness: 250 }}
-                  className="mt-4 overflow-hidden pt-4 border-t border-slate-100 dark:border-white/5"
+                  transition={{ type: 'spring', damping: 32, stiffness: 250 }}
+                  className="overflow-hidden"
                 >
-                  {children}
+                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+                    {children}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -122,24 +125,32 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
         badge: 'Recommended',
         children:
           data.budgetChoice === 'auto' && income > 0 ? (
-            <div className="mt-3 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">50% Needs</span>
-                <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(needs, data.currency)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">25% Wants</span>
-                <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(wants, data.currency)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">15% Savings</span>
-                <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(savings, data.currency)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-emerald-500 dark:text-emerald-400">10% Giving</span>
-                <span className="font-medium text-emerald-500 dark:text-emerald-400">{formatCurrency(giving, data.currency)}</span>
-              </div>
-            </div>
+            <StaggerContainer className="space-y-3">
+              <StaggerItem>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">50% Needs</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(needs, data.currency)}</span>
+                </div>
+              </StaggerItem>
+              <StaggerItem>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">25% Wants</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(wants, data.currency)}</span>
+                </div>
+              </StaggerItem>
+              <StaggerItem>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">15% Savings</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(savings, data.currency)}</span>
+                </div>
+              </StaggerItem>
+              <StaggerItem>
+                <div className="flex justify-between text-sm items-center">
+                  <span className="text-emerald-500 dark:text-emerald-400 font-bold">10% Giving</span>
+                  <span className="font-black text-emerald-500 dark:text-emerald-400 text-base">{formatCurrency(giving, data.currency)}</span>
+                </div>
+              </StaggerItem>
+            </StaggerContainer>
           ) : null,
       })}
 

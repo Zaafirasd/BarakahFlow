@@ -13,7 +13,7 @@ interface StepZakatProps {
 export default function StepZakat({ data, updateData, onNext }: StepZakatProps) {
   return (
     <motion.div 
-      layout 
+      layout="size"
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
       className="flex flex-col gap-8"
     >
@@ -58,7 +58,7 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {data.zakatEnabled && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
@@ -88,11 +88,11 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
         )}
       </AnimatePresence>
 
-      <motion.div layout className="pt-4">
+      <div className="pt-4">
         <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
           Continue
         </Button>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
