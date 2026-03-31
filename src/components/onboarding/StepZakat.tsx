@@ -64,18 +64,20 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden space-y-3"
           >
-            <div className="space-y-2 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-6">
-              <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">
-                Zakat anniversary date
-              </label>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-4 leading-relaxed">
-                When did you first become eligible for Zakat? If unsure, use today&apos;s date.
-              </p>
+            <div className="space-y-3 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
+              <div className="px-2 space-y-1">
+                <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+                  Zakat anniversary date
+                </label>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                  When did you first become eligible for Zakat? If unsure, use today&apos;s date.
+                </p>
+              </div>
               <input
                 type="date"
                 value={data.zakatDate || ''}
                 onChange={(e) => updateData({ zakatDate: e.target.value })}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
+                className="w-full box-border rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
                 id="onboarding-zakat-date"
               />
             </div>
