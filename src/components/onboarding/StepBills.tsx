@@ -8,7 +8,8 @@ import { formatBillFrequency, formatDayLabel } from '@/lib/utils/getFinancialMon
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import DayPickerGrid from '@/components/ui/DayPickerGrid';
-import type { BillFrequency, OnboardingData } from '@/types';
+import BottomSheet from '@/components/ui/BottomSheet';
+import type { BillFrequency, OnboardingData, OnboardingBill } from '@/types';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Zap: <Zap className="h-5 w-5" />,
@@ -31,7 +32,7 @@ function FrequencySelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as BillFrequency)}
-      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+      className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white appearance-none"
     >
       {FREQUENCY_OPTIONS.map((option) => (
         <option key={option} value={option} className="bg-white text-slate-900 dark:bg-slate-800 dark:text-white">
@@ -43,24 +44,37 @@ function FrequencySelect({
 }
 
 export default function StepBills({ data, updateData, onNext }: { data: OnboardingData; updateData: (updates: Partial<OnboardingData>) => void; onNext: () => void }) {
-  const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
-  const [tempAmount, setTempAmount] = useState('');
-  const [tempDueDay, setTempDueDay] = useState<number | null>(null);
-  const [tempFrequency, setTempFrequency] = useState<BillFrequency>('monthly');
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingBill, setEditingBill] = useState<Partial<OnboardingBill> | null>(null);
   const [showCustom, setShowCustom] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customAmount, setCustomAmount] = useState('');
-  const [customDueDay, setCustomDueDay] = useState<number | null>(null);
-  const [customFrequency, setCustomFrequency] = useState<BillFrequency>('monthly');
+
+  const handleOpenSheet = (template?: (typeof UAE_BILL_TEMPLATES)[0]) => {
+    if (template) {
+      setEditingBill({
+        name: template.name,
+        frequency: template.frequency,
+        amount: undefined,
+        dueDay: undefined,
+      });
+      setShowCustom(false);
+    } else {
+      setEditingBill({
+        name: '',
+        frequency: 'monthly',
+        amount: undefined,
+        dueDay: undefined,
+      });
+      setShowCustom(true);
+    }
+    setIsSheetOpen(true);
+  };
 
   const addBill = (name: string, amount: number, dueDay: number, frequency: BillFrequency) => {
     updateData({
       bills: [...data.bills, { name, amount, dueDay, frequency }],
     });
-    setExpandedTemplate(null);
-    setTempAmount('');
-    setTempDueDay(null);
-    setTempFrequency('monthly');
+    setIsSheetOpen(false);
+    setEditingBill(null);
   };
 
   const removeBill = (index: number) => {
@@ -69,23 +83,12 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
     updateData({ bills: newBills });
   };
 
-  const addCustomBill = () => {
-    if (customName && customAmount && customDueDay !== null) {
-      addBill(customName, parseFloat(customAmount), customDueDay, customFrequency);
-      setCustomName('');
-      setCustomAmount('');
-      setCustomDueDay(null);
-      setCustomFrequency('monthly');
-      setShowCustom(false);
-    }
-  };
-
   const isAdded = (name: string) => data.bills.some((bill) => bill.name === name);
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white">Regular bills</h2>
+        <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat">Regular bills</h2>
         <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">Add bills so we can track your remaining cash</p>
       </div>
 
@@ -100,86 +103,95 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
 
       <div className="grid grid-cols-2 gap-2.5">
         {UAE_BILL_TEMPLATES.map((template) => (
-          <div key={template.name} className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                if (!isAdded(template.name)) {
-                  if (expandedTemplate !== template.name) {
-                    setTempAmount('');
-                    setTempDueDay(null);
-                    setTempFrequency(template.frequency);
-                  }
-                  setExpandedTemplate(expandedTemplate === template.name ? null : template.name);
-                }
-              }}
-              disabled={isAdded(template.name)}
-              className={`flex w-full items-center gap-3 rounded-[1.3rem] p-4 text-left transition-all ${
-                isAdded(template.name)
-                  ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-inner'
-                  : expandedTemplate === template.name
-                    ? 'ring-2 ring-emerald-500 border-transparent bg-white shadow-xl dark:bg-slate-800'
-                    : 'border border-slate-200 bg-white hover:border-emerald-500/30 hover:bg-slate-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10'
-              }`}
-            >
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isAdded(template.name) ? 'bg-emerald-500/10' : 'bg-slate-50 dark:bg-white/5'}`}>
-                {ICON_MAP[template.icon]}
-              </div>
-              <div className="min-w-0 pr-1">
-                <span className="block truncate text-sm font-black text-slate-900 dark:text-white leading-tight">{template.name}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{formatBillFrequency(template.frequency)}</span>
-              </div>
-            </button>
-
-            <AnimatePresence>
-              {expandedTemplate === template.name && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="z-10 col-span-2 mt-2"
-                >
-                  <div className="space-y-4 rounded-[1.8rem] border border-emerald-500/30 bg-emerald-500/5 p-5">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Amount</label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        placeholder="450"
-                        value={tempAmount}
-                        onChange={(e) => setTempAmount(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
-                      />
-                    </div>
-                    
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Frequency</label>
-                      <FrequencySelect value={tempFrequency} onChange={setTempFrequency} />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Monthly Due Day</label>
-                      <DayPickerGrid selectedDay={tempDueDay} onSelect={setTempDueDay} />
-                    </div>
-
-                    <Button
-                      fullWidth
-                      disabled={!tempAmount || tempDueDay === null}
-                      onClick={() => {
-                        if (tempDueDay === null) return;
-                        addBill(template.name, parseFloat(tempAmount), tempDueDay, tempFrequency);
-                      }}
-                      className="rounded-2xl py-4 font-black"
-                    >
-                      Add Bill
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <button
+            key={template.name}
+            type="button"
+            onClick={() => !isAdded(template.name) && handleOpenSheet(template)}
+            disabled={isAdded(template.name)}
+            className={`flex w-full items-center gap-3 rounded-[1.3rem] p-4 text-left transition-all ${
+              isAdded(template.name)
+                ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-inner'
+                : 'border border-slate-200 bg-white hover:border-emerald-500/30 hover:bg-slate-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10'
+            }`}
+          >
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isAdded(template.name) ? 'bg-emerald-500/10' : 'bg-slate-50 dark:bg-white/5'}`}>
+              {ICON_MAP[template.icon]}
+            </div>
+            <div className="min-w-0 pr-1">
+              <span className="block truncate text-sm font-black text-slate-900 dark:text-white leading-tight">{template.name}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{formatBillFrequency(template.frequency)}</span>
+            </div>
+          </button>
         ))}
       </div>
+
+      <BottomSheet
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        title={showCustom ? "Add Custom Bill" : `Add ${editingBill?.name}`}
+        footer={
+          <Button
+            fullWidth
+            disabled={!editingBill?.amount || editingBill?.dueDay === undefined}
+            onClick={() => {
+              if (!editingBill?.name || !editingBill?.amount || editingBill.dueDay === undefined) return;
+              addBill(editingBill.name, editingBill.amount, editingBill.dueDay, editingBill.frequency || 'monthly');
+            }}
+            className="rounded-[1.5rem] py-4.5 font-black text-lg shadow-xl shadow-emerald-500/20"
+          >
+            Add Bill
+          </Button>
+        }
+      >
+        <div className="space-y-6 pt-2 pb-8">
+          {showCustom && (
+            <Input
+              label="Bill name"
+              placeholder="E.g. Netflix"
+              value={editingBill?.name || ''}
+              onChange={(e) => setEditingBill(prev => ({ ...prev, name: e.target.value }))}
+            />
+          )}
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">Amount</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={editingBill?.amount || ''}
+                  onChange={(e) => setEditingBill(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-4 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase tracking-widest">{data.currency}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">Frequency</label>
+              <FrequencySelect
+                value={editingBill?.frequency || 'monthly'}
+                onChange={(f) => setEditingBill(prev => ({ ...prev, frequency: f }))}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-4">
+              <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Monthly Due Day</label>
+              {editingBill?.dueDay !== undefined && (
+                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Day {editingBill.dueDay === 0 ? 'Last' : editingBill.dueDay}</span>
+              )}
+            </div>
+            <DayPickerGrid
+              selectedDay={editingBill?.dueDay ?? null}
+              onSelect={(d) => setEditingBill(prev => ({ ...prev, dueDay: d }))}
+            />
+          </div>
+        </div>
+      </BottomSheet>
 
       {data.bills.length > 0 && (
         <div className="space-y-3">
@@ -211,46 +223,13 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
       )}
 
       <div className="pt-2">
-        {showCustom ? (
-          <div className="space-y-4 rounded-[2rem] border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
-            <Input label="Bill name" placeholder="E.g. Netflix" value={customName} onChange={(e) => setCustomName(e.target.value)} />
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Amount</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Frequency</label>
-                <FrequencySelect value={customFrequency} onChange={setCustomFrequency} />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Due Day</label>
-              <DayPickerGrid selectedDay={customDueDay} onSelect={setCustomDueDay} />
-            </div>
-
-            <Button fullWidth onClick={addCustomBill} disabled={!customName || !customAmount || customDueDay === null} className="rounded-2xl py-4 font-black">
-              Add Custom Bill
-            </Button>
-            <button onClick={() => setShowCustom(false)} className="w-full text-xs font-bold text-slate-400 uppercase tracking-widest">Cancel</button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowCustom(true)}
-            className="flex items-center gap-2 rounded-2xl border border-transparent bg-slate-100 px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white"
-          >
-            <Plus className="h-4 w-4" /> Add custom bill
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => handleOpenSheet()}
+          className="flex items-center gap-2 rounded-2xl border border-transparent bg-slate-100 px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white"
+        >
+          <Plus className="h-4 w-4" /> Add custom bill
+        </button>
       </div>
 
       <div className="flex flex-col items-center gap-4 pt-4">
@@ -258,7 +237,7 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
           Continue
         </Button>
         <button type="button" onClick={onNext} className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white">
-          I'll Add Them Later
+          I&apos;ll Add Them Later
         </button>
       </div>
     </div>
