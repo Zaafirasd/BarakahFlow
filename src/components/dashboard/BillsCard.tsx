@@ -1,5 +1,5 @@
-import { AlertTriangle, ChevronRight, Clock } from 'lucide-react';
-import { daysUntil, formatBillFrequency, formatDayLabel } from '@/lib/utils/getFinancialMonth';
+import { AlertTriangle, Clock } from 'lucide-react';
+import { daysUntil } from '@/lib/utils/getFinancialMonth';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import Card from '@/components/ui/Card';
 import type { Bill } from '@/types';
@@ -45,8 +45,8 @@ export default function BillsCard({ bills, currency }: BillsCardProps) {
             <span className="truncate text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               {nextBill.name}
             </span>
-            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              {Math.floor(nextBill.amount).toLocaleString()} {currency}
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+              {formatCurrency(nextBill.amount, currency)}
             </span>
           </div>
           

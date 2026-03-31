@@ -54,15 +54,15 @@ export default function BudgetCard({ budgets, transactions, currency, startDay }
               <div className="mt-4">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    {Math.floor(totalSpent).toLocaleString()}
+                    {formatCurrency(totalSpent, currency)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
-                    / {Math.floor(totalBudgeted).toLocaleString()} {currency}
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 leading-none">
+                    / {formatCurrency(totalBudgeted, currency)}
                   </span>
                 </div>
                 <div className="mt-2 flex items-center gap-2">
                   <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                    {Math.floor(remaining).toLocaleString()} {currency} left
+                    {formatCurrency(remaining, currency)} left
                   </span>
                   <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
                     in {daysLeft} days

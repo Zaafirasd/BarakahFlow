@@ -23,9 +23,9 @@ export default function ZakatCard({ zakatDate, balance, currency, estimate, gold
   }
 
   const days = daysUntil(anniversary);
-  const baseZakat = typeof estimate === 'number' ? Math.max(0, estimate) : Math.max(0, balance * 0.025);
-  const goldZakat = (goldValue || 0) * 0.025;
-  const totalZakat = baseZakat + goldZakat;
+  const fallbackBalanceZakat = Math.max(0, balance * 0.025);
+  const fallbackGoldZakat = Math.max(0, (goldValue || 0) * 0.025);
+  const totalZakat = typeof estimate === 'number' ? Math.max(0, estimate) : fallbackBalanceZakat + fallbackGoldZakat;
 
   return (
     <Card className="border border-white/70 bg-white/82 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_50px_rgba(0,0,0,0.32)]">
@@ -40,10 +40,7 @@ export default function ZakatCard({ zakatDate, balance, currency, estimate, gold
           
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              {Math.floor(totalZakat).toLocaleString()}
-            </span>
-            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
-              {currency}
+              {formatCurrency(totalZakat, currency)}
             </span>
           </div>
           

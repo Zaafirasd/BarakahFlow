@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
@@ -13,7 +13,6 @@ import Button from '@/components/ui/Button';
 import type { Category, Transaction, User } from '@/types';
 import * as LucideIcons from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const IconComponent = ({ name, className }: { name: string; className?: string }) => {
   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
   const Icon = icons[name];
@@ -55,7 +54,7 @@ function TransactionsPageContent() {
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -91,11 +90,15 @@ function TransactionsPageContent() {
     setTransactions((txResult.data || []) as Transaction[]);
     setCategories((catResult.data || []) as Category[]);
     setLoading(false);
-  };
+  }, [categoryFilter, referenceDate]);
 
   useEffect(() => {
-    fetchTransactions();
-  }, [categoryFilter, monthParam]);
+    const frame = window.requestAnimationFrame(() => {
+      void fetchTransactions();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [fetchTransactions]);
 
   const openDetail = (tx: Transaction) => {
     setSelectedTx(tx);
@@ -165,7 +168,7 @@ function TransactionsPageContent() {
     
     setSelectedTx(null);
     setEditMode(false);
-    fetchTransactions();
+    void fetchTransactions();
   };
 
   const handleDelete = async () => {
@@ -181,7 +184,7 @@ function TransactionsPageContent() {
     setSelectedTx(null);
     setShowDelete(false);
     trackEvent(METRICS.TRANSACTION_DELETED);
-    fetchTransactions();
+    void fetchTransactions();
   };
 
   const grouped = useMemo(() => {

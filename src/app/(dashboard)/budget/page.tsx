@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, ChartPie, Pencil, Target, TriangleAlert } from 'lucide-react';
@@ -13,8 +13,6 @@ import Toast from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
 import { buildAutoBudgetPlan } from '@/lib/utils/budgeting';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
-import { validateAmount } from '@/lib/utils/validation';
-import { trackEvent, METRICS } from '@/lib/utils/analytics';
 import { formatDateLabel, getFinancialMonthLabel, getFinancialMonthRange } from '@/lib/utils/getFinancialMonth';
 import type { Budget, Category, Transaction, User } from '@/types';
 
@@ -113,7 +111,7 @@ export default function BudgetPage() {
     return () => window.clearTimeout(timeout);
   }, [toast.message]);
 
-  const loadBudgetView = async () => {
+  const loadBudgetView = useCallback(async () => {
     setLoading(true);
 
     const supabase = createClient();
@@ -164,19 +162,24 @@ export default function BudgetPage() {
     setTransactions((transactionResult.data || []).filter((transaction): transaction is TransactionWithCategory => Boolean(transaction.category)));
     setCategories(categoryResult.data || []);
     setLoading(false);
-  };
+  }, [referenceDate]);
 
   useEffect(() => {
-    loadBudgetView();
-  }, [monthOffset]);
+    const frame = window.requestAnimationFrame(() => {
+      void loadBudgetView();
+    });
 
-  useEffect(() => {
-    const initialDrafts = budgets.reduce<Record<string, string>>((acc, budget) => {
-      acc[budget.category_id] = String(budget.amount);
-      return acc;
-    }, {});
-    setDraftBudgets(initialDrafts);
-  }, [budgets]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [loadBudgetView]);
+
+  const budgetDrafts = useMemo(
+    () =>
+      budgets.reduce<Record<string, string>>((acc, budget) => {
+        acc[budget.category_id] = String(budget.amount);
+        return acc;
+      }, {}),
+    [budgets]
+  );
 
   const { start, end } = useMemo(
     () => getFinancialMonthRange(user?.financial_month_start_day ?? 1, referenceDate),
@@ -241,12 +244,7 @@ export default function BudgetPage() {
 
   const openEditor = () => {
     if (!isCurrentMonthView) return;
-    setDraftBudgets(
-      budgets.reduce<Record<string, string>>((acc, budget) => {
-        acc[budget.category_id] = String(budget.amount);
-        return acc;
-      }, {})
-    );
+    setDraftBudgets(budgetDrafts);
     setShowResetConfirm(false);
     setEditOpen(true);
   };

@@ -1,27 +1,37 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
-export async function GET(request: Request) {
+function getAdminEmails() {
+  return (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const apiKey = request.headers.get('x-admin-api-key');
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    // Security check: Only allow access with the ADMIN_API_KEY
-    if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid Admin API Key' }, { status: 401 });
+    if (userError || !user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!serviceRoleKey) {
-      return NextResponse.json({ error: 'Server configuration missing: SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 });
+    const adminEmails = getAdminEmails();
+    if (adminEmails.length === 0) {
+      return NextResponse.json({ error: 'Admin access is not configured' }, { status: 503 });
     }
 
-    // Use Service Role to read the app_analytics table (which is otherwise locked by RLS)
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    if (!adminEmails.includes(user.email.toLowerCase())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    // Fetch aggregate stats for the last 30 days
+    const adminClient = createAdminClient();
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -32,30 +42,29 @@ export async function GET(request: Request) {
       .order('date', { ascending: false });
 
     if (error) {
-       console.error('Stats fetch error:', error);
-       return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Reduce analytics into a more readable format
-    const stats: Record<string, any> = {};
+    const stats: Record<string, Record<string, number>> = {};
     const totals: Record<string, number> = {};
 
-    analytics?.forEach(row => {
-        if (!stats[row.date]) stats[row.date] = {};
-        stats[row.date][row.metric] = row.count;
-        totals[row.metric] = (totals[row.metric] || 0) + row.count;
+    analytics?.forEach((row) => {
+      if (!stats[row.date]) {
+        stats[row.date] = {};
+      }
+
+      stats[row.date][row.metric] = row.count;
+      totals[row.metric] = (totals[row.metric] || 0) + row.count;
     });
 
     return NextResponse.json({
-        summary: {
-            timeframe: 'last_30_days',
-            total_events: totals
-        },
-        daily_breakdown: stats
+      summary: {
+        timeframe: 'last_30_days',
+        total_events: totals,
+      },
+      daily_breakdown: stats,
     });
-    
-  } catch (err: any) {
-    console.error('Admin stats route error:', err);
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

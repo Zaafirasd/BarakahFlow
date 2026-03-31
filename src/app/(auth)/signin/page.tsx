@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { trackEvent, METRICS } from '@/lib/utils/analytics';
+import { validateEmail } from '@/lib/utils/validation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
@@ -29,6 +30,12 @@ function SignInForm() {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!validateEmail(normalizedEmail)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -36,7 +43,7 @@ function SignInForm() {
       const supabase = createClient();
 
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 
@@ -45,23 +52,28 @@ function SignInForm() {
         return;
       }
 
-      // Check onboarding status
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-        if (profile?.onboarding_completed) {
-          trackEvent(METRICS.SIGNIN);
-          router.push('/dashboard');
-        } else {
-          trackEvent(METRICS.SIGNIN);
-          router.push('/onboarding');
-        }
+      if (!user) {
+        setError('Signed in, but we could not confirm your session. Please try again.');
+        return;
       }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        setError('Signed in, but we could not load your profile. Please try again.');
+        return;
+      }
+
+      trackEvent(METRICS.SIGNIN);
+      router.push(profile?.onboarding_completed ? '/dashboard' : '/onboarding');
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -78,7 +90,6 @@ function SignInForm() {
         className="w-full max-w-md"
       >
         <Card className="border border-white/70 bg-white/88 p-8 shadow-[0_24px_70px_rgba(15,23,42,0.10)] dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          {/* Logo */}
           <div className="text-center mb-8">
             <Image
               src="/logo.png"
@@ -93,11 +104,10 @@ function SignInForm() {
 
           {passwordReset && (
             <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-              Password updated — please sign in with your new password.
+              Password updated - please sign in with your new password.
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSignIn} className="space-y-4">
             <Input
               label="Email"

@@ -211,8 +211,69 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+REVOKE ALL ON FUNCTION public.increment_metric(TEXT) FROM anon;
 GRANT EXECUTE ON FUNCTION public.increment_metric(TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.increment_metric(TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.increment_metric(TEXT) TO service_role;
+
+-- =============================================
+-- FUNCTION: pay_bill
+-- Handles logging a transaction and advancing the 
+-- bill due date in a single atomic database transaction.
+-- =============================================
+CREATE OR REPLACE FUNCTION public.pay_bill(
+  p_bill_id UUID,
+  p_account_id UUID,
+  p_amount DECIMAL,
+  p_payment_date DATE,
+  p_category_id UUID,
+  p_description TEXT DEFAULT 'Bill Payment'
+) RETURNS VOID AS $$
+DECLARE
+  v_user_id UUID;
+BEGIN
+  -- 1. Verify ownership and get user_id
+  SELECT user_id INTO v_user_id FROM public.bills WHERE id = p_bill_id;
+  
+  IF v_user_id IS NULL OR v_user_id != auth.uid() THEN
+    RAISE EXCEPTION 'Unauthorized or Bill not found';
+  END IF;
+
+  -- 2. Insert transaction (amount is negative for expenses)
+  INSERT INTO public.transactions (
+    user_id, 
+    account_id, 
+    category_id, 
+    amount, 
+    type, 
+    date, 
+    description
+  ) VALUES (
+    v_user_id, 
+    p_account_id, 
+    p_category_id, 
+    -ABS(p_amount), 
+    'expense', 
+    p_payment_date, 
+    p_description
+  );
+
+  -- 3. Update bill next_due_date
+  UPDATE public.bills
+  SET next_due_date = (
+    CASE 
+      WHEN frequency = 'monthly'   THEN next_due_date + INTERVAL '1 month'
+      WHEN frequency = 'quarterly' THEN next_due_date + INTERVAL '3 months'
+      WHEN frequency = 'annual'    THEN next_due_date + INTERVAL '1 year'
+      ELSE next_due_date + INTERVAL '1 month'
+    END
+  )::DATE,
+  updated_at = NOW()
+  WHERE id = p_bill_id;
+
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.pay_bill(UUID, UUID, DECIMAL, DATE, UUID, TEXT) TO authenticated;
 
 -- =============================================
 -- SEED: System Categories

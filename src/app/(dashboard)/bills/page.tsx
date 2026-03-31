@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarDays, Check, CircleAlert, Plus, Trash2 } from 'lucide-react';
 import BottomSheet from '@/components/ui/BottomSheet';
@@ -123,8 +123,7 @@ export default function BillsPage() {
   });
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const todayRef = useRef(new Date());
-  const today = todayRef.current;
+  const [today] = useState(() => new Date());
   const currentMonthKey = getMonthKey(today);
   const currency = user?.primary_currency || 'AED';
 
@@ -185,7 +184,11 @@ export default function BillsPage() {
   };
 
   useEffect(() => {
-    loadBills();
+    const frame = window.requestAnimationFrame(() => {
+      void loadBills();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const billPaymentMap = useMemo(() => {
@@ -250,7 +253,7 @@ export default function BillsPage() {
   const progress = totalDue > 0 ? Math.min((totalPaid / totalDue) * 100, 100) : 0;
 
   const paidBills = bills.filter((bill) => billPaymentMap.has(bill.id));
-  const overdueBills = bills.filter((bill) => !billPaymentMap.has(bill.id) && new Date(bill.next_due_date) < today);
+  const overdueBills = bills.filter((bill) => !billPaymentMap.has(bill.id) && daysUntil(bill.next_due_date) < 0);
   const dueSoonBills = bills.filter((bill) => {
     if (billPaymentMap.has(bill.id)) {
       return false;
@@ -415,32 +418,19 @@ export default function BillsPage() {
     setSaving(true);
     const supabase = createClient();
 
-    const transactionInsert = await supabase.from('transactions').insert({
-      user_id: user.id,
-      account_id: accountId,
-      category_id: category.id,
-      amount: -Math.abs(parsedAmount),
-      merchant_name: payingBill.name,
-      description: buildBillPaymentDescription(payingBill.id, paymentForm.date),
-      date: paymentForm.date,
-      type: 'expense',
+    const { error: rpcError } = await supabase.rpc('pay_bill', {
+      p_bill_id: payingBill.id,
+      p_account_id: accountId,
+      p_amount: parsedAmount,
+      p_payment_date: paymentForm.date,
+      p_category_id: category.id,
+      p_description: buildBillPaymentDescription(payingBill.id, paymentForm.date),
     });
-
-    if (transactionInsert.error) {
-      setSaving(false);
-      setPaymentErrors({ amount: transactionInsert.error.message });
-      return;
-    }
-
-    const updateBill = await supabase
-      .from('bills')
-      .update({ next_due_date: advanceBillNextDueDate(payingBill) })
-      .eq('id', payingBill.id);
 
     setSaving(false);
 
-    if (updateBill.error) {
-      setToast({ message: updateBill.error.message, tone: 'error' });
+    if (rpcError) {
+      setToast({ message: rpcError.message, tone: 'error' });
       return;
     }
 

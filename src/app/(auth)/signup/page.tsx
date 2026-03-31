@@ -59,7 +59,6 @@ export default function SignUpPage() {
         });
 
         if (profileError) {
-          console.error('Profile creation error:', profileError);
           setErrors({ general: 'Account created but profile setup failed. Please sign in.' });
           return;
         }

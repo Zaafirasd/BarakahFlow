@@ -1,15 +1,13 @@
 export function formatCurrency(amount: number, currency: string = 'AED'): string {
   const isNegative = amount < 0;
   const absAmount = Math.abs(amount);
-  
+
   const formatted = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(absAmount);
 
   const sign = isNegative ? '-' : '';
-
-  // Use symbols for major currencies, default to code for others
   const symbols: Record<string, string> = {
     USD: '$',
     GBP: '£',
@@ -20,7 +18,6 @@ export function formatCurrency(amount: number, currency: string = 'AED'): string
     return `${sign}${symbols[currency]}${formatted}`;
   }
 
-  // AED, SAR, etc. usually follow the amount or precede it
   return `${sign}${formatted} ${currency}`;
 }
 

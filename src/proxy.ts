@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }
 
@@ -14,6 +14,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public files (logo, icons, manifest)
      */
-    "/((?!_next/static|_next/image|favicon.ico|logo.png|icon-192.png|icon-512.png|admin-dashboard.html|api/admin/stats|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|logo.png|icon-192.png|icon-512.png|api/admin/stats|api/analytics/track|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

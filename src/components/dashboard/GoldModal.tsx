@@ -34,21 +34,14 @@ export default function GoldModal({ isOpen, onClose, currentGrams, onUpdate, use
 
     try {
       const supabase = createClient();
-      const { error } = await supabase
+      await supabase
         .from('users')
         .update({ gold_grams: numGrams })
         .eq('id', userId);
 
-      // We don't throw error here to allow the local fallback to work 
-      // even if the DB column hasn't been added yet
-      if (error) {
-        console.warn('Supabase update failed (likely missing column), using local fallback:', error);
-      }
-      
       onUpdate(numGrams);
       onClose();
-    } catch (error) {
-      console.error('Failed to update gold grams:', error);
+    } catch {
       // Still update UI since we have localStorage backup
       onUpdate(numGrams);
       onClose();

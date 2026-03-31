@@ -37,6 +37,8 @@ export default function StepComplete({ data }: StepCompleteProps) {
 
       const userId = user.id;
       const sanitizedName = sanitizeText(data.name, 50);
+      const validatedIncome = validateAmount(data.income) ?? 0;
+      const validatedGoldGrams = validateAmount(data.goldGrams) ?? 0;
 
       const { error: userError } = await supabase.from('users').upsert({
         id: userId,
@@ -44,12 +46,12 @@ export default function StepComplete({ data }: StepCompleteProps) {
         name: sanitizedName,
         primary_currency: data.currency,
         financial_month_start_day: data.payDay,
-        monthly_income: validateAmount(data.income) || 0,
+        monthly_income: validatedIncome,
         income_type: data.incomeType,
         zakat_enabled: data.zakatEnabled,
         zakat_anniversary_date: data.zakatDate || null,
-        gold_grams: validateAmount(data.goldGrams) || 0,
-        onboarding_completed: true,
+        gold_grams: validatedGoldGrams,
+        onboarding_completed: false,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
 
@@ -58,41 +60,95 @@ export default function StepComplete({ data }: StepCompleteProps) {
         return;
       }
 
-      const { error: accountError } = await supabase.from('accounts').insert({
-        user_id: userId,
-        name: 'Main Account',
-        type: 'cash',
-        currency: data.currency,
-        opening_balance: 0,
-      });
+      const { data: existingAccounts, error: accountLookupError } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .limit(1);
 
-      if (accountError) {
-        setError(`Failed to create account: ${accountError.message}`);
+      if (accountLookupError) {
+        setError(`Failed to check accounts: ${accountLookupError.message}`);
         return;
       }
 
-      if (data.bills.length > 0) {
-        const billRows = data.bills.map((bill) => ({
+      if (!existingAccounts?.length) {
+        const { error: accountError } = await supabase.from('accounts').insert({
           user_id: userId,
-          name: sanitizeText(bill.name, 50),
-          amount: validateAmount(bill.amount) || 0,
-          due_day: bill.dueDay,
-          frequency: bill.frequency,
-          next_due_date: calculateNextDueDate(bill.dueDay, bill.frequency).toISOString().split('T')[0],
-        }));
-        const { error: billsError } = await supabase.from('bills').insert(billRows);
-        if (billsError) {
-          setError(`Failed to save bills: ${billsError.message}`);
+          name: 'Main Account',
+          type: 'cash',
+          currency: data.currency,
+          opening_balance: 0,
+        });
+
+        if (accountError) {
+          setError(`Failed to create account: ${accountError.message}`);
           return;
         }
       }
 
+      if (data.bills.length > 0) {
+        const { data: existingBills, error: existingBillsError } = await supabase
+          .from('bills')
+          .select('name, amount, due_day, frequency')
+          .eq('user_id', userId)
+          .eq('is_active', true);
+
+        if (existingBillsError) {
+          setError(`Failed to check existing bills: ${existingBillsError.message}`);
+          return;
+        }
+
+        const existingBillKeys = new Set(
+          (existingBills ?? []).map((bill) => `${bill.name}|${Number(bill.amount)}|${bill.due_day}|${bill.frequency}`)
+        );
+
+        const billRows = data.bills
+          .map((bill) => {
+            const amount = validateAmount(bill.amount);
+
+            if (amount === null || amount <= 0) {
+              return null;
+            }
+
+            return {
+              user_id: userId,
+              name: sanitizeText(bill.name, 50),
+              amount,
+              due_day: bill.dueDay,
+              frequency: bill.frequency,
+              next_due_date: calculateNextDueDate(bill.dueDay, bill.frequency).toISOString().split('T')[0],
+            };
+          })
+          .filter((bill): bill is NonNullable<typeof bill> => {
+            if (!bill) {
+              return false;
+            }
+
+            const key = `${bill.name}|${Number(bill.amount)}|${bill.due_day}|${bill.frequency}`;
+            return !existingBillKeys.has(key);
+          });
+
+        if (billRows.length > 0) {
+          const { error: billsError } = await supabase.from('bills').insert(billRows);
+          if (billsError) {
+            setError(`Failed to save bills: ${billsError.message}`);
+            return;
+          }
+        }
+      }
+
       if (data.budgetChoice === 'auto' && data.income > 0) {
-        const { data: categories } = await supabase
+        const { data: categories, error: categoriesError } = await supabase
           .from('categories')
           .select('id, name')
           .eq('is_system', true)
           .eq('type', 'expense');
+
+        if (categoriesError) {
+          setError(`Failed to load categories: ${categoriesError.message}`);
+          return;
+        }
 
         if (categories) {
           const needsCategories = ['housing', 'utilities', 'groceries & food', 'transportation', 'healthcare'];
@@ -117,13 +173,29 @@ export default function StepComplete({ data }: StepCompleteProps) {
           });
 
           if (budgetRows.length > 0) {
-            const { error: budgetError } = await supabase.from('budgets').insert(budgetRows);
+            const { error: budgetError } = await supabase
+              .from('budgets')
+              .upsert(budgetRows, { onConflict: 'user_id,category_id' });
+
             if (budgetError) {
               setError(`Failed to set up budget: ${budgetError.message}`);
               return;
             }
           }
         }
+      }
+
+      const { error: completeOnboardingError } = await supabase
+        .from('users')
+        .update({
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (completeOnboardingError) {
+        setError(`Failed to complete onboarding: ${completeOnboardingError.message}`);
+        return;
       }
 
       // Track aggregate events anonymously
@@ -133,9 +205,8 @@ export default function StepComplete({ data }: StepCompleteProps) {
       if (data.bills.length > 0) trackEvent(METRICS.BILL_ADDED);
 
       router.push('/dashboard');
-    } catch (err: any) {
-      console.error('Save error:', err);
-      setError(err.message || 'Something went wrong. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

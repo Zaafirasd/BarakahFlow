@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, MoonStar } from 'lucide-react';
+import { ChevronDown, MoonStar } from 'lucide-react';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -11,7 +11,8 @@ import PageTransition from '@/components/ui/PageTransition';
 import Toast from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
-import { calculateAccountsTotal, calculateZakat, getNextAnniversary, type ZakatCalculationResult, type ZakatInputs } from '@/lib/utils/zakat';
+import { sanitizeText, validateAmount } from '@/lib/utils/validation';
+import { calculateAccountsTotal, calculateZakat, getNextAnniversary, getZakatStorageKey, type ZakatCalculationResult, type ZakatInputs } from '@/lib/utils/zakat';
 import type { Account, Category, Transaction, User } from '@/types';
 
 type TransactionWithCategory = Transaction & { category?: Category | null };
@@ -34,6 +35,15 @@ interface StoredZakatCalculation {
   inputs: ZakatInputs;
   result: ZakatCalculationResult;
   updatedAt: string;
+}
+
+function isStoredZakatCalculation(value: unknown): value is StoredZakatCalculation {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<StoredZakatCalculation>;
+  return typeof candidate.updatedAt === 'string' && !!candidate.inputs && !!candidate.result;
 }
 
 const DEFAULT_INPUTS: ZakatInputs = {
@@ -164,21 +174,23 @@ export default function ZakatPage() {
       setUser(profile);
 
       // Source of truth: Supabase zakat_inputs
-      if (profile.zakat_inputs) {
-        const stored = profile.zakat_inputs as StoredZakatCalculation;
+      if (isStoredZakatCalculation(profile.zakat_inputs)) {
+        const stored = profile.zakat_inputs;
         setStoredCalculation(stored);
         setInputs(stored.inputs);
       } else {
         // Fallback: localStorage
         if (typeof window !== 'undefined') {
-          const storedLocal = window.localStorage.getItem(`zakat_inputs_${profile.id}`);
+          const storedLocal = window.localStorage.getItem(getZakatStorageKey(profile.id));
           if (storedLocal) {
             try {
-              const parsed = JSON.parse(storedLocal) as StoredZakatCalculation;
-              setStoredCalculation(parsed);
-              setInputs(parsed.inputs);
-            } catch (err) {
-              console.error('Failed to parse local zakat storage', err);
+              const parsed = JSON.parse(storedLocal) as unknown;
+              if (isStoredZakatCalculation(parsed)) {
+                setStoredCalculation(parsed);
+                setInputs(parsed.inputs);
+              }
+            } catch {
+              // Ignore malformed local backup data.
             }
           }
         }
@@ -193,7 +205,11 @@ export default function ZakatPage() {
   };
 
   useEffect(() => {
-    loadPage();
+    const frame = window.requestAnimationFrame(() => {
+      void loadPage();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const currency = user?.primary_currency || 'AED';
@@ -247,7 +263,7 @@ export default function ZakatPage() {
       setToast({ message: 'Cloud sync failed, saving locally', tone: 'error' });
       // Fallback save to localStorage if Supabase fails
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(`zakat_inputs_${user.id}`, JSON.stringify(payload));
+        window.localStorage.setItem(getZakatStorageKey(user.id), JSON.stringify(payload));
       }
     } else {
       setToast({ message: calculatedResult.aboveNisab ? 'Zakat estimate synced' : 'Calculation saved to cloud', tone: 'success' });
@@ -308,8 +324,8 @@ export default function ZakatPage() {
       account_id: accountId,
       category_id: category.id,
       amount: -Math.abs(parsedAmount),
-      merchant_name: paymentForm.recipient.trim() || categoryName,
-      description: paymentForm.notes.trim() || null,
+      merchant_name: sanitizeText(paymentForm.recipient, 80) || categoryName,
+      description: sanitizeText(paymentForm.notes, 200) || null,
       date: paymentForm.date,
       type: 'expense',
     });
@@ -386,7 +402,7 @@ export default function ZakatPage() {
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500/60 leading-none">Zakat Al-Mal Estimate</p>
                 <p className="mt-3 text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                  {storedCalculation ? formatCurrency(storedCalculation.result.zakatDue, currency) : formatCurrency(0, currency)}
+                  {formatCurrency(storedCalculation?.result.zakatDue ?? calculatedResult.zakatDue, currency)}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                    <div className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-slate-500">
@@ -404,6 +420,32 @@ export default function ZakatPage() {
                <Button onClick={handleCalculate} loading={saving} fullWidth className="rounded-[1.4rem] py-4 text-sm font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-none shadow-xl">
                   {storedCalculation ? 'Update Cloud Calc' : 'Start Calculation'}
                </Button>
+            </div>
+          </Card>
+
+          <Card className="border border-white/70 bg-white/82 p-6 dark:border-white/10 dark:bg-slate-900/76 rounded-[2rem] shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Zakat Al-Fitr</p>
+                <p className="mt-3 text-2xl font-black tracking-tight text-slate-900 dark:text-white">{formatCurrency(fitrTotal, currency)}</p>
+                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Calculated at 25 per family member.</p>
+              </div>
+              <div className="w-28">
+                <label className="ml-3 text-[11px] font-bold text-slate-400">Family Count</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={familyCount}
+                  onChange={(event) => setFamilyCount(event.target.value)}
+                  className="mt-1 w-full rounded-[1.2rem] border border-slate-200 bg-white px-4 py-3 text-center text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                />
+              </div>
+            </div>
+            <div className="mt-5">
+              <Button fullWidth onClick={() => openPaymentSheet('fitr')} className="rounded-[1.4rem] py-4 text-sm font-bold">
+                Log Fitr Payment
+              </Button>
             </div>
           </Card>
 
@@ -481,6 +523,47 @@ export default function ZakatPage() {
                     className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white transition-all"
                   />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-400 ml-4">Sukuk</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={inputs.sukukValue || ''}
+                    onChange={(event) => setInput('sukukValue', event.target.value)}
+                    className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white transition-all"
+                  />
+                </div>
+              </div>
+            </ExpandableCard>
+
+            <ExpandableCard
+              title="Receivables"
+              subtitle="Loans you expect back and other receivables."
+              total={formatCurrency(inputs.loansGiven + inputs.otherReceivables, currency)}
+              isOpen={expandedSection === 'receivables'}
+              onToggle={() => setExpandedSection((current) => (current === 'receivables' ? null : 'receivables'))}
+            >
+              <div className="grid gap-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-400 ml-4">Loans Given</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={inputs.loansGiven || ''}
+                    onChange={(event) => setInput('loansGiven', event.target.value)}
+                    className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-400 ml-4">Other Receivables</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={inputs.otherReceivables || ''}
+                    onChange={(event) => setInput('otherReceivables', event.target.value)}
+                    className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white transition-all"
+                  />
+                </div>
               </div>
             </ExpandableCard>
 
@@ -499,6 +582,16 @@ export default function ZakatPage() {
                       inputMode="decimal"
                       value={inputs.debtsDue || ''}
                       onChange={(event) => setInput('debtsDue', event.target.value)}
+                      className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-rose-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white transition-all"
+                    />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-400 ml-4">Essential Expenses Due</label>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={inputs.essentialExpenses || ''}
+                      onChange={(event) => setInput('essentialExpenses', event.target.value)}
                       className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-rose-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white transition-all"
                     />
                  </div>
@@ -550,7 +643,12 @@ export default function ZakatPage() {
           </Card>
 
           <Card className="border border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-900/76 p-6 rounded-[2rem]">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-5 text-center">Payment History</p>
+            <div className="mb-5 flex items-center justify-between gap-3 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Payment History</p>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                {formatCurrency(totalPaidThisYear, currency)} this year
+              </span>
+            </div>
             {paymentHistory.length === 0 ? (
               <div className="py-8 text-center bg-slate-50 dark:bg-white/5 rounded-[1.5rem] border border-dashed border-slate-200 dark:border-white/10">
                  <p className="text-sm font-bold text-slate-400">No records found</p>
@@ -591,7 +689,14 @@ export default function ZakatPage() {
                     type="number"
                     inputMode="decimal"
                     value={paymentForm.amount}
-                    onChange={(event) => { setPaymentForm((current) => ({ ...current, amount: event.target.value })); setPaymentErrors(prev => ({ ...prev, amount: undefined })); }}
+                    onChange={(event) => {
+                      const parsedAmount = validateAmount(event.target.value);
+                      setPaymentForm((current) => ({ ...current, amount: event.target.value }));
+                      setPaymentErrors((prev) => ({
+                        ...prev,
+                        amount: parsedAmount === null || parsedAmount <= 0 ? 'Enter a valid amount > 0' : undefined,
+                      }));
+                    }}
                     className={`w-full rounded-[1.5rem] border ${paymentErrors.amount ? 'border-rose-500' : 'border-slate-200 dark:border-white/10'} bg-white px-5 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:bg-white/5 dark:text-white transition-all`}
                     placeholder="0.00"
                   />
@@ -604,7 +709,7 @@ export default function ZakatPage() {
                 <input
                   type="text"
                   value={paymentForm.recipient}
-                  onChange={(event) => setPaymentForm((current) => ({ ...current, recipient: event.target.value }))}
+                  onChange={(event) => setPaymentForm((current) => ({ ...current, recipient: sanitizeText(event.target.value, 80) }))}
                   placeholder="Mosque / Charity"
                   className="w-full rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
                 />
@@ -627,7 +732,7 @@ export default function ZakatPage() {
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-4">Internal Notes</label>
                 <textarea
                   value={paymentForm.notes}
-                  onChange={(event) => setPaymentForm((current) => ({ ...current, notes: event.target.value }))}
+                  onChange={(event) => setPaymentForm((current) => ({ ...current, notes: sanitizeText(event.target.value, 200) }))}
                   placeholder="Any details to remember..."
                   className="min-h-24 w-full rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white resize-none"
                 />

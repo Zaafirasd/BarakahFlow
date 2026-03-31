@@ -1,36 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, TrendingUp, Plus, Edit2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 
 interface GoldCardProps {
   grams: number;
   currency: string;
+  pricePerGram: number | null;
+  isCachedPrice?: boolean;
   onManage: () => void;
 }
 
-export default function GoldCard({ grams, currency, onManage }: GoldCardProps) {
-  const [pricePerGram, setPricePerGram] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const res = await fetch('/api/gold-price');
-        const data = await res.json();
-        setPricePerGram(data.price_per_gram);
-      } catch (error) {
-        console.error('Failed to fetch gold price:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPrice();
-  }, []);
-
+export default function GoldCard({ grams, currency, pricePerGram, isCachedPrice, onManage }: GoldCardProps) {
   const totalValue = pricePerGram ? grams * pricePerGram : 0;
+  const loading = pricePerGram === null;
 
   return (
     <div className="group relative overflow-hidden rounded-[2.5rem] border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.03] to-amber-600/[0.08] p-6 shadow-sm transition-all hover:bg-amber-500/[0.05] dark:border-amber-500/10 dark:from-amber-400/5 dark:to-amber-500/10 dark:shadow-none">
@@ -74,9 +58,13 @@ export default function GoldCard({ grams, currency, onManage }: GoldCardProps) {
               {loading ? '...' : formatCurrency(totalValue, currency)}
             </span>
             {!loading && pricePerGram && (
-              <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+              <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                isCachedPrice
+                  ? 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300'
+                  : 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400'
+              }`}>
                 <TrendingUp className="h-3 w-3" />
-                Live
+                {isCachedPrice ? 'Cached' : 'Live'}
               </div>
             )}
           </div>

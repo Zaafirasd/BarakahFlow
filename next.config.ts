@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+type ExtendedNextConfig = NextConfig & {
+  allowedDevOrigins?: string[];
+};
+
+const nextConfig: ExtendedNextConfig = {
   // Allow phone access in dev mode
-  // @ts-ignore - allowedDevOrigins is suggested by Next.js server logs
   allowedDevOrigins: ['192.168.1.194', 'localhost:3000'],
   async headers() {
     return [

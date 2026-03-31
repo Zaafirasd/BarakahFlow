@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Banknote, Briefcase, Calculator, PiggyBank } from 'lucide-react';
+import { Banknote, Briefcase, PiggyBank } from 'lucide-react';
 import { CURRENCY_SYMBOLS } from '@/lib/constants/categories';
 import Button from '@/components/ui/Button';
 import type { OnboardingData } from '@/types';

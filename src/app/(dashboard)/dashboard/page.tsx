@@ -6,14 +6,14 @@ import { Moon, SunMedium } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import { getFinancialMonthRange } from '@/lib/utils/getFinancialMonth';
-import { getZakatStorageKey } from '@/lib/utils/zakat';
+import { calculateAccountsTotal, getZakatStorageKey } from '@/lib/utils/zakat';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import BudgetCard from '@/components/dashboard/BudgetCard';
 import BillsCard from '@/components/dashboard/BillsCard';
 import ZakatCard from '@/components/dashboard/ZakatCard';
 import GoldCard from '@/components/dashboard/GoldCard';
 import GoldModal from '@/components/dashboard/GoldModal';
-import type { User, Transaction, Budget, Bill } from '@/types';
+import type { Account, User, Transaction, Budget, Bill } from '@/types';
 import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
@@ -21,18 +21,18 @@ import { DashboardSkeleton } from '@/components/ui/Skeleton';
 export default function DashboardPage() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [zakatEstimate, setZakatEstimate] = useState<number | null>(null);
+  const [goldPrice, setGoldPrice] = useState<number>(286.45);
+  const [isGoldCached, setIsGoldCached] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [isGoldModalOpen, setIsGoldModalOpen] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [error, setError] = useState('');
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -40,17 +40,30 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createClient();
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
+      setLoading(true);
+      setError('');
 
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
+      try {
+        const supabase = createClient();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
 
-        if (profile) {
+        if (!authUser) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+
+        if (profileError || !profile) {
+          throw new Error(profileError?.message || 'Unable to load your dashboard profile.');
+        }
+
           // Check for local gold fallback
           let localGold = 0;
           if (typeof window !== 'undefined') {
@@ -64,8 +77,9 @@ export default function DashboardPage() {
 
           setUser({
             ...profile,
-            gold_grams: profile.gold_grams || localGold
+            gold_grams: profile.gold_grams || localGold,
           });
+
         if (typeof window !== 'undefined') {
           const stored = window.localStorage.getItem(getZakatStorageKey(profile.id));
           if (stored) {
@@ -82,39 +96,79 @@ export default function DashboardPage() {
 
         const { start, end } = getFinancialMonthRange(profile.financial_month_start_day);
 
-        const { data: txns } = await supabase
-          .from('transactions')
-          .select('*, category:categories(*)')
-          .eq('user_id', authUser.id)
-          .gte('date', start.toISOString().split('T')[0])
-          .lte('date', end.toISOString().split('T')[0])
-          .order('date', { ascending: false });
+        const [monthTransactionsResult, allTransactionsResult, accountsResult, budgetResult, billResult] = await Promise.all([
+          supabase
+            .from('transactions')
+            .select('*, category:categories(*)')
+            .eq('user_id', authUser.id)
+            .gte('date', start.toISOString().split('T')[0])
+            .lte('date', end.toISOString().split('T')[0])
+            .order('date', { ascending: false }),
+          supabase
+            .from('transactions')
+            .select('id, user_id, account_id, category_id, amount, merchant_name, description, date, type')
+            .eq('user_id', authUser.id),
+          supabase
+            .from('accounts')
+            .select('id, user_id, name, type, currency, opening_balance, is_active, created_at')
+            .eq('user_id', authUser.id)
+            .eq('is_active', true),
+          supabase
+            .from('budgets')
+            .select('*, category:categories(*)')
+            .eq('user_id', authUser.id)
+            .eq('is_active', true),
+          supabase
+            .from('bills')
+            .select('*')
+            .eq('user_id', authUser.id)
+            .eq('is_active', true)
+            .order('next_due_date', { ascending: true })
+            .limit(3),
+        ]);
 
-        setTransactions(txns || []);
+        const firstError =
+          monthTransactionsResult.error ||
+          allTransactionsResult.error ||
+          accountsResult.error ||
+          budgetResult.error ||
+          billResult.error;
 
-        const { data: budgetData } = await supabase
-          .from('budgets')
-          .select('*, category:categories(*)')
-          .eq('user_id', authUser.id)
-          .eq('is_active', true);
+        if (firstError) {
+          throw new Error(firstError.message);
+        }
 
-        setBudgets(budgetData || []);
+        setTransactions((monthTransactionsResult.data || []) as Transaction[]);
+        setAllTransactions((allTransactionsResult.data || []) as Transaction[]);
+        setAccounts((accountsResult.data || []) as Account[]);
+        setBudgets((budgetResult.data || []) as Budget[]);
+        setBills((billResult.data || []) as Bill[]);
 
-        const { data: billData } = await supabase
-          .from('bills')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .eq('is_active', true)
-          .order('next_due_date', { ascending: true })
-          .limit(3);
-
-        setBills(billData || []);
+        // 4. Fetch Live Gold Price
+        try {
+          const goldRes = await fetch('/api/gold-price');
+          if (goldRes.ok) {
+            const goldData = await goldRes.json();
+            if (goldData.price_per_gram) {
+              setGoldPrice(goldData.price_per_gram);
+              setIsGoldCached(Boolean(goldData.cached));
+            }
+          }
+        } catch {
+          // Silent fallback to default 286.45
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unable to load your dashboard right now.');
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
-    fetchData();
+    const frame = window.requestAnimationFrame(() => {
+      void fetchData();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const today = new Date().toLocaleDateString('en-US', {
@@ -160,15 +214,25 @@ export default function DashboardPage() {
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/60 text-slate-700 shadow-sm backdrop-blur-md transition-all active:scale-95 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
                 aria-label="Toggle theme"
               >
-                {mounted && resolvedTheme === 'dark' ? <SunMedium className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {resolvedTheme === 'dark' ? <SunMedium className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
             </div>
           </div>
 
+          {error ? (
+            <div className="mb-4 rounded-[1.6rem] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+              {error}
+            </div>
+          ) : null}
+
           <StaggerContainer className="flex flex-col gap-3.5">
 
             <StaggerItem>
-              <BalanceCard transactions={transactions} currency={user?.primary_currency || 'AED'} />
+              <BalanceCard 
+                transactions={transactions} 
+                totalBalance={calculateAccountsTotal(accounts, allTransactions)}
+                currency={user?.primary_currency || 'AED'} 
+              />
             </StaggerItem>
 
             <StaggerItem>
@@ -190,6 +254,8 @@ export default function DashboardPage() {
               <GoldCard 
                 grams={user?.gold_grams || 0} 
                 currency={user?.primary_currency || 'AED'} 
+                pricePerGram={goldPrice}
+                isCachedPrice={isGoldCached}
                 onManage={() => setIsGoldModalOpen(true)}
               />
             </StaggerItem>
@@ -199,10 +265,10 @@ export default function DashboardPage() {
                 <button type="button" onClick={() => router.push('/zakat')} className="block w-full text-left">
                   <ZakatCard 
                     zakatDate={user.zakat_anniversary_date}
-                    balance={transactions.reduce((acc, txn) => txn.type === 'income' ? acc + txn.amount : acc - txn.amount, 0)}
+                    balance={calculateAccountsTotal(accounts, allTransactions)}
                     currency={user.primary_currency || 'AED'}
                     estimate={zakatEstimate}
-                    goldValue={(user.gold_grams || 0) * 286.45} // Using the same placeholder price as the API for consistency
+                    goldValue={(user.gold_grams || 0) * goldPrice} 
                   />
                 </button>
               </StaggerItem>

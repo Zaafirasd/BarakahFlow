@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { CURRENCY_SYMBOLS } from '@/lib/constants/categories';
+import { trackEvent, METRICS } from '@/lib/utils/analytics';
+import { sanitizeText, validateAmount } from '@/lib/utils/validation';
 import Button from '@/components/ui/Button';
 import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import type { Category, User } from '@/types';
 import * as LucideIcons from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const IconComponent = ({ name, className }: { name: string; className?: string }) => {
   const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
   const Icon = icons[name];
@@ -30,73 +31,120 @@ export default function AddTransactionPage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createClient();
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
+      try {
+        const supabase = createClient();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) {
+          setError('Please sign in again to add a transaction.');
+          return;
+        }
 
-      if (!user) {
-        const { data: profile } = await supabase
-          .from('users')
+        if (!user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+
+          if (profileError) {
+            throw new Error(profileError.message);
+          }
+
+          if (profile) {
+            setUser(profile);
+          }
+        }
+
+        const { data: cats, error: categoriesError } = await supabase
+          .from('categories')
           .select('*')
-          .eq('id', authUser.id)
-          .single();
-        if (profile) setUser(profile);
-      }
+          .or(`user_id.eq.${authUser.id},user_id.is.null`)
+          .eq('type', type)
+          .order('sort_order');
 
-      const { data: cats } = await supabase
-        .from('categories')
-        .select('*')
-        .or(`user_id.eq.${authUser.id},user_id.is.null`)
-        .eq('type', type)
-        .order('sort_order');
+        if (categoriesError) {
+          throw new Error(categoriesError.message);
+        }
 
-      setCategories(cats || []);
-      if (selectedCategory && !cats?.find(c => c.id === selectedCategory.id)) {
-        setSelectedCategory(null);
+        setCategories(cats || []);
+        if (selectedCategory && !cats?.find((category) => category.id === selectedCategory.id)) {
+          setSelectedCategory(null);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unable to load transaction form.');
       }
     };
 
     fetchData();
-  }, [type]);
+  }, [selectedCategory, type, user]);
 
   const handleSave = async () => {
-    if (!amount || !selectedCategory || !user) return;
+    const validatedAmount = validateAmount(amount);
+
+    if (!user) {
+      setError('Please complete onboarding before adding transactions.');
+      return;
+    }
+
+    if (!selectedCategory) {
+      setError('Please choose a category.');
+      return;
+    }
+
+    if (validatedAmount === null || validatedAmount <= 0) {
+      setError('Enter a valid amount greater than 0.');
+      return;
+    }
+
     setLoading(true);
+    setError('');
 
     try {
       const supabase = createClient();
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
+      if (!authUser) {
+        throw new Error('Please sign in again to save this transaction.');
+      }
 
-      const { data: accounts } = await supabase
+      const { data: accounts, error: accountError } = await supabase
         .from('accounts')
         .select('id')
         .eq('user_id', authUser.id)
         .eq('is_active', true)
         .limit(1);
 
+      if (accountError) {
+        throw new Error(accountError.message);
+      }
+
       const accountId = accounts?.[0]?.id;
-      if (!accountId) throw new Error('No account found');
+      if (!accountId) {
+        throw new Error('No active account found.');
+      }
 
-      const numAmount = parseFloat(amount);
-
-      await supabase.from('transactions').insert({
+      const { error: insertError } = await supabase.from('transactions').insert({
         user_id: authUser.id,
         account_id: accountId,
         category_id: selectedCategory.id,
-        amount: type === 'expense' ? -Math.abs(numAmount) : Math.abs(numAmount),
+        amount: type === 'expense' ? -Math.abs(validatedAmount) : Math.abs(validatedAmount),
         type,
-        merchant_name: description || null,
+        merchant_name: description ? sanitizeText(description, 80) : null,
         date,
       });
 
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
+      trackEvent(METRICS.TRANSACTION_ADDED);
       setSuccess(true);
       setTimeout(() => router.back(), 1200);
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : 'Unable to save transaction.');
     } finally {
       setLoading(false);
     }
@@ -241,7 +289,12 @@ export default function AddTransactionPage() {
 
           {/* Action */}
           <StaggerItem>
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
+              {error ? (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                  {error}
+                </div>
+              ) : null}
               <Button
                 fullWidth
                 disabled={!amount || parseFloat(amount) <= 0 || !selectedCategory}

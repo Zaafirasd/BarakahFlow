@@ -15,7 +15,7 @@ import { createClient } from '@/lib/supabase/client';
 import { inferBudgetStyle } from '@/lib/utils/budgeting';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { formatDateLabel, formatDayLabel } from '@/lib/utils/getFinancialMonth';
-import { sanitizeText, validateAmount } from '@/lib/utils/validation';
+import { sanitizeText, validateAmount, validateEmail } from '@/lib/utils/validation';
 import { getZakatStorageKey } from '@/lib/utils/zakat';
 import type { Category, User } from '@/types';
 
@@ -200,14 +200,16 @@ export default function ProfilePage() {
 
   const handleSaveEmail = async () => {
     if (!user) return;
-    if (!emailDraft.trim() || !emailDraft.includes('@')) {
+    const normalizedEmail = emailDraft.trim().toLowerCase();
+
+    if (!validateEmail(normalizedEmail)) {
       setFormErrors({ email: 'Enter a valid email address' });
       return;
     }
 
     setSaving(true);
     const supabase = createClient();
-    const authResult = await supabase.auth.updateUser({ email: emailDraft.trim() });
+    const authResult = await supabase.auth.updateUser({ email: normalizedEmail });
 
     if (authResult.error) {
       setSaving(false);
@@ -215,22 +217,29 @@ export default function ProfilePage() {
       return;
     }
 
-    const profileResult = await supabase
-      .from('users')
-      .update({ email: emailDraft.trim(), updated_at: new Date().toISOString() })
-      .eq('id', user.id);
-
     setSaving(false);
 
-    if (profileResult.error) {
-      setFormErrors({ email: profileResult.error.message });
-      return;
+    // If confirmation is required, the 'new_email' property will exist but 'email' remains same.
+    // We only update our local DB if the auth record already matches.
+    if (authResult.data.user?.email?.toLowerCase() === normalizedEmail) {
+      const profileResult = await supabase
+        .from('users')
+        .update({ email: normalizedEmail, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (profileResult.error) {
+        setFormErrors({ email: profileResult.error.message });
+        return;
+      }
+
+      setUser((current) => (current ? { ...current, email: normalizedEmail } : current));
+      setToast({ message: 'Email updated successfully', tone: 'success' });
+    } else {
+      setToast({ message: 'Check your new email for a verification link', tone: 'info' });
     }
 
-    setUser((current) => (current ? { ...current, email: emailDraft.trim() } : current));
     setFormErrors({});
     setActiveSheet(null);
-    setToast({ message: 'Email update requested', tone: 'success' });
   };
 
   const handleSaveIncome = async () => {
@@ -378,8 +387,8 @@ export default function ProfilePage() {
       await supabase.auth.signOut();
       router.replace('/signin');
       
-    } catch (err: any) {
-      setToast({ message: err.message, tone: 'error' });
+    } catch (err) {
+      setToast({ message: err instanceof Error ? err.message : 'Failed to delete account', tone: 'error' });
     } finally {
       setSaving(false);
     }

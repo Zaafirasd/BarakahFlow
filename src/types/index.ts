@@ -8,7 +8,7 @@ export interface User {
   income_type: 'salary' | 'freelance' | 'none';
   zakat_enabled: boolean;
   zakat_anniversary_date: string | null;
-  zakat_inputs?: any;
+  zakat_inputs?: Record<string, unknown> | null;
   gold_grams: number;
   onboarding_completed: boolean;
   created_at?: string;

@@ -12,7 +12,9 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[App Error]', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[App Error]', error);
+    }
   }, [error]);
 
   return (
@@ -31,7 +33,7 @@ export default function Error({
           Something went wrong
         </h1>
         <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-          An unexpected error occurred. Your data is safe — try refreshing.
+          An unexpected error occurred. Your data is safe - try refreshing.
         </p>
 
         {error.digest && (

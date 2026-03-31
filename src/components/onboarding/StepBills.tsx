@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Plus, X, Zap, Wifi, Home, Shield, Heart, Info } from 'lucide-react';
 import { UAE_BILL_TEMPLATES } from '@/lib/constants/bill-templates';
 import { formatBillFrequency, formatDayLabel } from '@/lib/utils/getFinancialMonth';

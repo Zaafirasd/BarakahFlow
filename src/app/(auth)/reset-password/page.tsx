@@ -14,20 +14,17 @@ import Card from '@/components/ui/Card';
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const code = searchParams.get('code');
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<{ password?: string; confirm?: string; general?: string }>({});
   const [loading, setLoading] = useState(false);
-  const [exchanging, setExchanging] = useState(true);
+  const [exchanging, setExchanging] = useState(Boolean(code));
   const [sessionReady, setSessionReady] = useState(false);
 
-  // Exchange the code from the email link for a session
   useEffect(() => {
-    const code = searchParams.get('code');
     if (!code) {
-      setErrors({ general: 'Invalid or expired reset link. Please request a new one.' });
-      setExchanging(false);
       return;
     }
 
@@ -40,7 +37,7 @@ function ResetPasswordForm() {
         setSessionReady(true);
       }
     });
-  }, [searchParams]);
+  }, [code]);
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -68,7 +65,6 @@ function ResetPasswordForm() {
       return;
     }
 
-    // Sign out after password change so user logs in fresh
     await supabase.auth.signOut();
     router.replace('/signin?reset=success');
   };
@@ -77,7 +73,20 @@ function ResetPasswordForm() {
     return (
       <div className="flex flex-col items-center gap-3 py-8">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-        <p className="text-sm text-slate-500 dark:text-slate-400">Verifying reset link…</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Verifying reset link...</p>
+      </div>
+    );
+  }
+
+  if (!code) {
+    return (
+      <div className="space-y-4 text-center py-4">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+          Invalid or expired reset link. Please request a new one.
+        </div>
+        <Link href="/forgot-password" className="block text-sm font-bold text-emerald-500 hover:text-emerald-400 transition-colors">
+          Request a new link
+        </Link>
       </div>
     );
   }
@@ -97,7 +106,7 @@ function ResetPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+      <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
         Choose a strong new password for your account.
       </p>
 
@@ -106,7 +115,7 @@ function ResetPasswordForm() {
         type="password"
         placeholder="Min 8 characters"
         value={password}
-        onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); }}
+        onChange={(e) => { setPassword(e.target.value); setErrors((prev) => ({ ...prev, password: undefined })); }}
         error={errors.password}
         icon={<Lock className="w-4 h-4" />}
         id="reset-password"
@@ -117,7 +126,7 @@ function ResetPasswordForm() {
         type="password"
         placeholder="Confirm your new password"
         value={confirmPassword}
-        onChange={(e) => { setConfirmPassword(e.target.value); setErrors(prev => ({ ...prev, confirm: undefined })); }}
+        onChange={(e) => { setConfirmPassword(e.target.value); setErrors((prev) => ({ ...prev, confirm: undefined })); }}
         error={errors.confirm}
         icon={<Lock className="w-4 h-4" />}
         id="reset-confirm-password"
