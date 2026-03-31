@@ -1,6 +1,5 @@
 'use client';
 
-import { useRef, useLayoutEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
@@ -21,17 +20,9 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
   const savings = income * 0.15;
   const giving = income * 0.1;
 
-  const detailsRef = useRef<HTMLDivElement>(null);
-  const [detailsHeight, setDetailsHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    if (detailsRef.current) {
-      setDetailsHeight(detailsRef.current.scrollHeight);
-    }
-  }, [income]);
-
   const isAuto = data.budgetChoice === 'auto';
   const isManual = data.budgetChoice === 'manual';
+  const showBreakdown = isAuto && income > 0;
 
   return (
     <div className="space-y-6">
@@ -72,7 +63,7 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
               </div>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5">
                 <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Set it up for me</h3>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
@@ -80,45 +71,46 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
                 </span>
               </div>
 
-              {/* Expandable budget details */}
-              <motion.div
-                initial={false}
-                animate={{
-                  height: isAuto && income > 0 ? detailsHeight : 0,
-                  opacity: isAuto && income > 0 ? 1 : 0,
+              {/* CSS grid expand — no JS measurement, correct initial height, smooth transition */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateRows: showBreakdown ? '1fr' : '0fr',
+                  opacity: showBreakdown ? 1 : 0,
+                  transition: 'grid-template-rows 0.35s cubic-bezier(0.23,1,0.32,1), opacity 0.35s cubic-bezier(0.23,1,0.32,1)',
                 }}
-                transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-                className="overflow-hidden"
               >
-                <div ref={detailsRef} className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
-                  <StaggerContainer className="space-y-3">
-                    <StaggerItem>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">50% Needs</span>
-                        <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(needs, data.currency)}</span>
-                      </div>
-                    </StaggerItem>
-                    <StaggerItem>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">25% Wants</span>
-                        <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(wants, data.currency)}</span>
-                      </div>
-                    </StaggerItem>
-                    <StaggerItem>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">15% Savings</span>
-                        <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(savings, data.currency)}</span>
-                      </div>
-                    </StaggerItem>
-                    <StaggerItem>
-                      <div className="flex justify-between text-sm items-center">
-                        <span className="text-emerald-500 dark:text-emerald-400 font-bold">10% Giving</span>
-                        <span className="font-black text-emerald-500 dark:text-emerald-400 text-base">{formatCurrency(giving, data.currency)}</span>
-                      </div>
-                    </StaggerItem>
-                  </StaggerContainer>
+                <div className="overflow-hidden">
+                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+                    <StaggerContainer className="space-y-3">
+                      <StaggerItem>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400">50% Needs</span>
+                          <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(needs, data.currency)}</span>
+                        </div>
+                      </StaggerItem>
+                      <StaggerItem>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400">25% Wants</span>
+                          <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(wants, data.currency)}</span>
+                        </div>
+                      </StaggerItem>
+                      <StaggerItem>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400">15% Savings</span>
+                          <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(savings, data.currency)}</span>
+                        </div>
+                      </StaggerItem>
+                      <StaggerItem>
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-emerald-500 dark:text-emerald-400 font-bold">10% Giving</span>
+                          <span className="font-black text-emerald-500 dark:text-emerald-400 text-base">{formatCurrency(giving, data.currency)}</span>
+                        </div>
+                      </StaggerItem>
+                    </StaggerContainer>
+                  </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -156,7 +148,7 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
               </div>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">I&apos;ll do it myself later</h3>
               <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">Skip budget creation for now</p>
             </div>

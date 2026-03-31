@@ -71,9 +71,9 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
           opacity: data.zakatEnabled ? 1 : 0,
         }}
         transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-        className="overflow-hidden"
+        className="w-full overflow-hidden"
       >
-        <div ref={contentRef} className="space-y-3 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
+        <div ref={contentRef} className="w-full space-y-3 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
           <div className="px-2 space-y-1">
             <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
               Zakat anniversary date
@@ -86,7 +86,7 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
             type="date"
             value={data.zakatDate || ''}
             onChange={(e) => updateData({ zakatDate: e.target.value })}
-            className="w-full box-border rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
+            className="w-full max-w-full box-border rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
             id="onboarding-zakat-date"
           />
         </div>
