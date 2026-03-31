@@ -455,27 +455,24 @@ export default function BudgetPage() {
                     onClick={() => setExpandedCategoryId((current) => (current === item.budget.category_id ? null : item.budget.category_id))}
                     className="w-full p-5 text-left"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 items-start gap-4">
-                        <div
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                          style={{ backgroundColor: `${item.budget.category.color}15`, color: item.budget.category.color }}
-                        >
-                          <LucideIcon name={item.budget.category.icon} className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">{item.budget.category.name}</p>
-                          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-                            {formatCurrency(item.spent, user?.primary_currency || 'AED')} / {formatCurrency(item.budget.amount, user?.primary_currency || 'AED')}
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+                        style={{ backgroundColor: `${item.budget.category.color}15`, color: item.budget.category.color }}
+                      >
+                        <LucideIcon name={item.budget.category.icon} className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+                            {item.budget.category.name}
+                          </p>
+                          <p className={`text-sm font-extrabold ${item.overAmount > 0 ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400'}`}>
+                            {Math.round(item.percentage)}%
                           </p>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-base font-extrabold ${item.overAmount > 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white'}`}>
-                          {Math.round(item.percentage)}%
-                        </p>
-                        <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                          {item.remaining >= 0 ? `${formatCurrency(item.remaining, user?.primary_currency || 'AED')} left` : `${formatCurrency(Math.abs(item.remaining), user?.primary_currency || 'AED')} over`}
+                        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                          {formatCurrency(item.spent, user?.primary_currency || 'AED')} of {formatCurrency(item.budget.amount, user?.primary_currency || 'AED')} spent
                         </p>
                       </div>
                     </div>
