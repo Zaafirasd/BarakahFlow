@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import Button from '@/components/ui/Button';
@@ -39,13 +39,15 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
   }) => (
     <motion.button
       type="button"
+      layout
       onClick={onClick}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', damping: 25, stiffness: 400 }}
       aria-pressed={selected}
       className="relative w-full text-left outline-none"
     >
-      <div
+      <motion.div
+        layout
         className={`relative overflow-hidden rounded-[2.2rem] border p-6 transition-all duration-300 ${
           selected
             ? 'border-emerald-500/50 bg-emerald-500/5 shadow-[0_20px_40px_-12px_rgba(16,185,129,0.15)] dark:border-emerald-500/30'
@@ -79,10 +81,22 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
               ) : null}
             </div>
             {description ? <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p> : null}
-            {children}
+            <AnimatePresence>
+              {children && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                  className="overflow-hidden"
+                >
+                  {children}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+      </motion.div>
     </motion.button>
   );
 
