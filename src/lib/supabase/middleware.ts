@@ -39,8 +39,15 @@ export const updateSession = async (request: NextRequest) => {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const publicRoutes = ["/signin", "/signup", "/forgot-password", "/reset-password", "/privacy-policy"];
-  const isPublicRoute = publicRoutes.includes(pathname);
+  
+  // Routes where signed-in users should be redirected away (to dashboard)
+  const authRoutes = ["/signin", "/signup", "/forgot-password", "/reset-password"];
+  // Routes accessible by everyone (signed in or not)
+  const publicInfoRoutes = ["/privacy-policy"];
+  
+  const isAuthRoute = authRoutes.includes(pathname);
+  const isPublicInfoRoute = publicInfoRoutes.includes(pathname);
+  const isPublicRoute = isAuthRoute || isPublicInfoRoute;
 
   // If signed in, check onboarding status
   let onboardingCompleted = false;
@@ -65,7 +72,7 @@ export const updateSession = async (request: NextRequest) => {
   }
 
   // Redirect signed-in users away from auth pages
-  if (user && isPublicRoute) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = onboardingCompleted ? "/dashboard" : "/onboarding";
     return NextResponse.redirect(url);
