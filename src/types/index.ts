@@ -8,6 +8,7 @@ export interface User {
   zakat_enabled: boolean;
   zakat_anniversary_date: string | null;
   zakat_inputs?: any;
+  gold_grams: number;
   onboarding_completed: boolean;
   created_at?: string;
   updated_at?: string;

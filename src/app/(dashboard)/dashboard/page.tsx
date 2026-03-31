@@ -11,6 +11,8 @@ import BalanceCard from '@/components/dashboard/BalanceCard';
 import BudgetCard from '@/components/dashboard/BudgetCard';
 import BillsCard from '@/components/dashboard/BillsCard';
 import ZakatCard from '@/components/dashboard/ZakatCard';
+import GoldCard from '@/components/dashboard/GoldCard';
+import GoldModal from '@/components/dashboard/GoldModal';
 import type { User, Transaction, Budget, Bill } from '@/types';
 import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
@@ -26,6 +28,7 @@ export default function DashboardPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [zakatEstimate, setZakatEstimate] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGoldModalOpen, setIsGoldModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -169,6 +172,14 @@ export default function DashboardPage() {
               </button>
             </StaggerItem>
 
+            <StaggerItem>
+              <GoldCard 
+                grams={user?.gold_grams || 0} 
+                currency={user?.primary_currency || 'AED'} 
+                onManage={() => setIsGoldModalOpen(true)}
+              />
+            </StaggerItem>
+
             {user?.zakat_enabled && (
               <StaggerItem>
                 <button type="button" onClick={() => router.push('/zakat')} className="block w-full text-left">
@@ -177,12 +188,25 @@ export default function DashboardPage() {
                     balance={transactions.reduce((acc, txn) => txn.type === 'income' ? acc + txn.amount : acc - txn.amount, 0)}
                     currency={user.primary_currency || 'AED'}
                     estimate={zakatEstimate}
+                    goldValue={(user.gold_grams || 0) * 286.45} // Using the same placeholder price as the API for consistency
                   />
                 </button>
               </StaggerItem>
             )}
           </StaggerContainer>
         </div>
+
+        <GoldModal
+          isOpen={isGoldModalOpen}
+          onClose={() => setIsGoldModalOpen(false)}
+          currentGrams={user?.gold_grams || 0}
+          userId={user?.id || ''}
+          onUpdate={(newGrams) => {
+            if (user) {
+              setUser({ ...user, gold_grams: newGrams });
+            }
+          }}
+        />
       </div>
     </PageTransition>
   );
