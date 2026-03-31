@@ -269,6 +269,7 @@ export default function DashboardPage() {
                     currency={user.primary_currency || 'AED'}
                     estimate={zakatEstimate}
                     goldValue={(user.gold_grams || 0) * goldPrice} 
+                    goldPrice={goldPrice}
                   />
                 </button>
               </StaggerItem>

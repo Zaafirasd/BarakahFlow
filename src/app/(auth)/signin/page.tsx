@@ -48,7 +48,11 @@ function SignInForm() {
       });
 
       if (authError) {
-        setError(authError.message);
+        if (authError.message.toLowerCase().includes('confirm') || authError.status === 400) {
+          setError('Email not confirmed. Please check your inbox for the activation link.');
+        } else {
+          setError(authError.message);
+        }
         return;
       }
 

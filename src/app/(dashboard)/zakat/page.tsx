@@ -113,6 +113,7 @@ export default function ZakatPage() {
   const [loading, setLoading] = useState(true);
   const [expandedSection, setExpandedSection] = useState<ExpandableSection>('cash');
   const [inputs, setInputs] = useState<ZakatInputs>(DEFAULT_INPUTS);
+  const [goldPrice, setGoldPrice] = useState<number>(286.45);
   const [storedCalculation, setStoredCalculation] = useState<StoredZakatCalculation | null>(null);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [paymentKind, setPaymentKind] = useState<PaymentKind>('mal');
@@ -201,6 +202,20 @@ export default function ZakatPage() {
     setCategories((categoriesResult.data || []) as Array<Pick<Category, 'id' | 'name'>>);
     setTransactions((transactionsResult.data || []) as TransactionWithCategory[]);
     setAccountId(accountsResult.data?.[0]?.id || null);
+
+    // Fetch Live Gold Price
+    try {
+      const goldRes = await fetch('/api/gold-price');
+      if (goldRes.ok) {
+        const goldData = await goldRes.json();
+        if (goldData.price_per_gram) {
+          setGoldPrice(goldData.price_per_gram);
+        }
+      }
+    } catch {
+      // Fallback already set to 286.45
+    }
+
     setLoading(false);
   };
 
@@ -214,7 +229,7 @@ export default function ZakatPage() {
 
   const currency = user?.primary_currency || 'AED';
   const cashAndBankBalance = useMemo(() => calculateAccountsTotal(accounts, transactions), [accounts, transactions]);
-  const calculatedResult = useMemo(() => calculateZakat(cashAndBankBalance, inputs), [cashAndBankBalance, inputs]);
+  const calculatedResult = useMemo(() => calculateZakat(cashAndBankBalance, inputs, goldPrice), [cashAndBankBalance, inputs, goldPrice]);
   const nextAnniversary = useMemo(() => getNextAnniversary(user?.zakat_anniversary_date || null), [user?.zakat_anniversary_date]);
   const paymentHistory = useMemo(
     () =>

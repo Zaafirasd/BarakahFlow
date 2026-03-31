@@ -275,6 +275,28 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION public.pay_bill(UUID, UUID, DECIMAL, DATE, UUID, TEXT) TO authenticated;
 
+GRANT EXECUTE ON FUNCTION public.pay_bill(UUID, UUID, DECIMAL, DATE, UUID, TEXT) TO authenticated;
+
+-- =============================================
+-- FUNCTION: handle_new_user
+-- Automatically creates a profile record in 
+-- public.users whenever an auth account is 
+-- created. runs with SECURITY DEFINER privileges.
+-- =============================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email)
+  VALUES (new.id, new.email);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- TRIGGER: runs AFTER INSERT on auth.users
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- =============================================
 -- SEED: System Categories
 -- =============================================

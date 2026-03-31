@@ -1,6 +1,7 @@
 import { Moon } from 'lucide-react';
 import { daysUntil } from '@/lib/utils/getFinancialMonth';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
+import { NISAB_GOLD_GRAMS } from '@/lib/utils/zakat';
 import Card from '@/components/ui/Card';
 
 interface ZakatCardProps {
@@ -9,9 +10,10 @@ interface ZakatCardProps {
   currency: string;
   estimate?: number | null;
   goldValue?: number | null;
+  goldPrice?: number;
 }
 
-export default function ZakatCard({ zakatDate, balance, currency, estimate, goldValue }: ZakatCardProps) {
+export default function ZakatCard({ zakatDate, balance, currency, estimate, goldValue, goldPrice = 286.45 }: ZakatCardProps) {
   if (!zakatDate) return null;
 
   const anniversary = new Date(zakatDate);
@@ -23,6 +25,10 @@ export default function ZakatCard({ zakatDate, balance, currency, estimate, gold
   }
 
   const days = daysUntil(anniversary);
+  const nisab = goldPrice * NISAB_GOLD_GRAMS;
+  const totalAssets = balance + (goldValue || 0);
+  const aboveNisab = totalAssets >= nisab;
+
   const fallbackBalanceZakat = Math.max(0, balance * 0.025);
   const fallbackGoldZakat = Math.max(0, (goldValue || 0) * 0.025);
   const totalZakat = typeof estimate === 'number' ? Math.max(0, estimate) : fallbackBalanceZakat + fallbackGoldZakat;
@@ -40,7 +46,7 @@ export default function ZakatCard({ zakatDate, balance, currency, estimate, gold
           
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              {formatCurrency(totalZakat, currency)}
+              {aboveNisab ? formatCurrency(totalZakat, currency) : 'Below Nisab'}
             </span>
           </div>
           
