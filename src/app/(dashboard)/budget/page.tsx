@@ -55,7 +55,7 @@ function CategoryBudgetRow({ category, value, onChange }: CategoryBudgetRowProps
           className="w-24 shrink-0 rounded-[1.2rem] border border-slate-200 bg-white px-3 py-4 text-right text-sm font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-slate-900 dark:text-white"
         />
       </div>
-      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         {QUICK_AMOUNTS.map((amount) => (
           <button
             key={`${category.id}-${amount}`}
