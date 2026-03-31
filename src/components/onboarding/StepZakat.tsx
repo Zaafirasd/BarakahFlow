@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import type { OnboardingData } from '@/types';
 
@@ -17,27 +18,42 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
         <p className="mt-1 text-slate-500 dark:text-slate-400">Do you want to track Zakat?</p>
       </div>
 
-      <div className="flex items-center justify-center gap-4">
-        <button
-          onClick={() => updateData({ zakatEnabled: false })}
-          className={`rounded-xl px-8 py-3 font-semibold transition-all ${
-            !data.zakatEnabled
-              ? 'border border-slate-200 bg-white text-slate-900 dark:border-white/20 dark:bg-white/15 dark:text-white'
-              : 'border border-slate-200 bg-slate-50 text-slate-500 dark:border-white/5 dark:bg-white/5 dark:text-slate-500'
-          }`}
-        >
-          No
-        </button>
-        <button
-          onClick={() => updateData({ zakatEnabled: true })}
-          className={`rounded-xl px-8 py-3 font-semibold transition-all ${
-            data.zakatEnabled
-              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-              : 'border border-slate-200 bg-slate-50 text-slate-500 dark:border-white/5 dark:bg-white/5 dark:text-slate-500'
-          }`}
-        >
-          Yes
-        </button>
+      <div className="flex justify-center">
+        <div className="relative flex w-full max-w-[280px] items-center rounded-2xl bg-slate-100 p-1.5 dark:bg-white/5">
+          {/* Animated Background Selector */}
+          <motion.div
+            className="absolute h-[calc(100%-12px)] w-[calc(50%-6px)] rounded-xl bg-white shadow-sm dark:bg-slate-800"
+            initial={false}
+            animate={{
+              x: data.zakatEnabled ? '100%' : '0%',
+              backgroundColor: data.zakatEnabled ? '#10b981' : undefined,
+            }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            style={{
+              backgroundColor: data.zakatEnabled ? '#10b981' : undefined
+            }}
+          />
+          
+          <button
+            type="button"
+            onClick={() => updateData({ zakatEnabled: false })}
+            className={`relative flex-1 py-3 text-sm font-black uppercase tracking-widest transition-colors duration-200 ${
+              !data.zakatEnabled ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
+            }`}
+          >
+            No
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => updateData({ zakatEnabled: true })}
+            className={`relative flex-1 py-3 text-sm font-black uppercase tracking-widest transition-colors duration-200 ${
+              data.zakatEnabled ? 'text-white' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
+            }`}
+          >
+            Yes
+          </button>
+        </div>
       </div>
 
       {data.zakatEnabled && (

@@ -40,43 +40,45 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
     <motion.button
       type="button"
       onClick={onClick}
-      whileTap={{ scale: 0.99 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 400 }}
       aria-pressed={selected}
-      className="relative w-full text-left"
+      className="relative w-full text-left outline-none"
     >
-      {selected ? (
-        <motion.span
-          aria-hidden="true"
-          initial={{ opacity: 0.45, scale: 0.98 }}
-          animate={{ opacity: [0.42, 0.72, 0.42], scale: [0.99, 1.01, 0.99] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-          className="pointer-events-none absolute inset-1 rounded-[2rem] bg-emerald-400/18 blur-xl"
-        />
-      ) : null}
-
       <div
-        className={`relative rounded-[2rem] border p-5 backdrop-blur-xl transition-all duration-200 ${
+        className={`relative overflow-hidden rounded-[2.2rem] border p-6 transition-all duration-300 ${
           selected
-            ? 'border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_0_1px_rgba(52,211,153,0.24),0_0_28px_rgba(16,185,129,0.22),0_18px_44px_rgba(16,185,129,0.18)]'
-            : 'border-white/70 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/5'
+            ? 'border-emerald-500/50 bg-emerald-500/5 shadow-[0_20px_40px_-12px_rgba(16,185,129,0.15)] dark:border-emerald-500/30'
+            : 'border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:shadow-none'
         }`}
       >
-        <div className="flex items-start gap-3">
+        {selected && (
+          <motion.div
+            layoutId="highlight"
+            className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          />
+        )}
+        
+        <div className="relative flex items-start gap-4">
           <div
-            className={`rounded-lg p-2 ${
-              selected ? 'bg-emerald-500/14 text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors duration-300 ${
+              selected ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-50 text-slate-400 dark:bg-white/5 dark:text-slate-500'
             }`}
           >
             {icon}
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white Montserrat">{title}</h3>
               {badge ? (
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-400">{badge}</span>
+                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  {badge}
+                </span>
               ) : null}
             </div>
-            {description ? <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{description}</p> : null}
+            {description ? <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p> : null}
             {children}
           </div>
         </div>
