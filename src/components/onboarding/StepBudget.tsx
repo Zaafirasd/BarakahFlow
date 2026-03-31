@@ -42,47 +42,43 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
       layout
       onClick={onClick}
       whileTap={{ scale: 0.985 }}
-      transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 400 }}
       aria-pressed={selected}
       className="relative w-full text-left outline-none"
     >
       <motion.div
-        layout
-        className={`relative overflow-hidden rounded-[2.2rem] border p-6 transition-all duration-500 ease-out ${
+        layout="size"
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className={`relative overflow-hidden rounded-[2.2rem] border p-6 transition-colors duration-500 ${
           selected
-            ? 'border-emerald-500/50 bg-emerald-500/[0.03] shadow-[0_20px_40px_-12px_rgba(16,185,129,0.12)] dark:border-emerald-500/30 dark:bg-emerald-500/[0.02]'
+            ? 'border-emerald-500/50 bg-emerald-500/[0.04] shadow-[0_20px_40px_-12px_rgba(16,185,129,0.12)] dark:border-emerald-500/30 dark:bg-emerald-500/[0.02]'
             : 'border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:shadow-none'
         }`}
       >
-        {selected && (
-          <motion.div
-            layoutId="highlight"
-            className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.08] via-transparent to-transparent"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          />
-        )}
-        
         <div className="relative flex items-start gap-4">
-          <motion.div
-            layout
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all duration-500 ${
-              selected 
-                ? 'bg-emerald-500 text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)] ring-4 ring-emerald-500/10' 
-                : 'bg-slate-50 text-slate-400 dark:bg-white/5 dark:text-slate-500'
-            }`}
-          >
-            {icon}
-          </motion.div>
+          <div className="relative h-12 w-12 shrink-0">
+            {selected && (
+              <motion.div
+                layoutId="icon-active-bg"
+                className="absolute inset-0 rounded-2xl bg-emerald-500 shadow-[0_8px_20px_rgba(16,185,129,0.3)] ring-4 ring-emerald-500/10"
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              />
+            )}
+            <div className={`relative flex h-full w-full items-center justify-center rounded-2xl transition-colors duration-500 ${
+              selected ? 'text-white' : 'text-slate-400 dark:text-slate-500'
+            }`}>
+              {icon}
+            </div>
+          </div>
+          
           <div className="flex-1">
             <div className="flex items-center gap-2.5">
               <motion.h3 layout="position" className="text-lg font-black tracking-tight text-slate-900 dark:text-white Montserrat">{title}</motion.h3>
               {badge && (
                 <motion.span 
                   layout="position"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400"
                 >
                   {badge}
@@ -90,19 +86,18 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
               )}
             </div>
             {description && <motion.p layout="position" className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">{description}</motion.p>}
-            <AnimatePresence mode="wait">
+            
+            <AnimatePresence initial={false}>
               {children && (
                 <motion.div
                   key="budget-details"
-                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                  animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
-                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
                   transition={{ type: 'spring', damping: 30, stiffness: 250 }}
-                  className="overflow-hidden"
+                  className="mt-4 overflow-hidden pt-4 border-t border-slate-100 dark:border-white/5"
                 >
-                  <div className="pt-2 border-t border-slate-100 dark:border-white/5">
-                    {children}
-                  </div>
+                  {children}
                 </motion.div>
               )}
             </AnimatePresence>
