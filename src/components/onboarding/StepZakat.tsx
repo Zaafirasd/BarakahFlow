@@ -12,7 +12,11 @@ interface StepZakatProps {
 
 export default function StepZakat({ data, updateData, onNext }: StepZakatProps) {
   return (
-    <div className="space-y-8">
+    <motion.div 
+      layout 
+      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+      className="flex flex-col gap-8"
+    >
       <div className="text-center">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Zakat tracking</h2>
         <p className="mt-1 text-slate-500 dark:text-slate-400">Do you want to track Zakat?</p>
@@ -60,7 +64,8 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden space-y-3"
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="overflow-hidden"
           >
             <div className="space-y-3 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
               <div className="px-2 space-y-1">
@@ -83,11 +88,11 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
         )}
       </AnimatePresence>
 
-      <div className="pt-4">
+      <motion.div layout className="pt-4">
         <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
           Continue
         </Button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
