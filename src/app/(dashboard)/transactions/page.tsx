@@ -370,7 +370,7 @@ function TransactionsPageContent() {
 
             <div className="space-y-1.5">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-4">Category</label>
-              <div className={`grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1 p-2 rounded-[1.5rem] border ${formErrors.category_id ? 'border-rose-500 bg-rose-500/5' : 'border-slate-100 dark:border-white/5'}`}>
+              <div className={`grid grid-cols-2 gap-2 max-h-52 overflow-y-auto no-scrollbar pr-1 p-2 rounded-[1.5rem] border ${formErrors.category_id ? 'border-rose-500 bg-rose-500/5' : 'border-slate-100 dark:border-white/5'}`}>
                 {categories.filter(c => c.type === selectedTx.type).map(cat => (
                   <button
                     key={cat.id}
@@ -401,7 +401,7 @@ function TransactionsPageContent() {
               <Button variant="secondary" fullWidth onClick={() => { setEditMode(false); setFormErrors({}); }} className="rounded-3xl py-4 font-bold">
                 Cancel
               </Button>
-              <Button fullWidth onClick={handleSave} loading={saving} className="rounded-3xl py-4 font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent">
+              <Button fullWidth onClick={handleSave} loading={saving} className="rounded-3xl py-4 font-bold bg-emerald-600 text-white dark:bg-emerald-500 border-transparent shadow-lg shadow-emerald-500/20">
                 Save Changes
               </Button>
             </div>
