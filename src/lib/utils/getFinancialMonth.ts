@@ -54,9 +54,9 @@ export function getFinancialMonthRange(startDay: number, referenceDate?: Date | 
 }
 
 export function getFinancialMonthLabel(startDay: number, referenceDate?: Date | string): string {
-  const { end } = getFinancialMonthRange(startDay, referenceDate);
+  const { start } = getFinancialMonthRange(startDay, referenceDate);
 
-  return end.toLocaleDateString('en-US', {
+  return start.toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
   });

@@ -73,9 +73,11 @@ function CategoryBudgetRow({ category, value, onChange }: CategoryBudgetRowProps
 
 function getReferenceDate(offset: number) {
   const referenceDate = new Date();
-  // Set day to 1 before modifying month to avoid rollover on the 31st
-  referenceDate.setDate(1);
-  referenceDate.setMonth(referenceDate.getMonth() + offset);
+  if (offset !== 0) {
+    // Set day to 1 before modifying month to avoid rollover on the 31st
+    referenceDate.setDate(1);
+    referenceDate.setMonth(referenceDate.getMonth() + offset);
+  }
   return referenceDate;
 }
 
