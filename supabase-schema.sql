@@ -21,9 +21,11 @@ CREATE TABLE public.users (
   primary_currency TEXT NOT NULL DEFAULT 'AED',
   financial_month_start_day INTEGER NOT NULL DEFAULT 1 CHECK (financial_month_start_day BETWEEN 0 AND 31),
   monthly_income DECIMAL,
+  income_type TEXT NOT NULL DEFAULT 'salary',
   zakat_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   zakat_anniversary_date DATE,
   zakat_inputs JSONB,
+  gold_grams DECIMAL NOT NULL DEFAULT 0,
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

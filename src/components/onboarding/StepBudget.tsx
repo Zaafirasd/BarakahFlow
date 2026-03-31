@@ -22,12 +22,13 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
 
   const isAuto = data.budgetChoice === 'auto';
   const isManual = data.budgetChoice === 'manual';
-  const showBreakdown = isAuto && income > 0;
+  const hasIncome = income > 0;
+  const showBreakdown = isAuto && hasIncome;
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Budget plan</h2>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white Montserrat">Budget plan</h2>
         <p className="mt-1 text-slate-500 dark:text-slate-400">How do you want to budget?</p>
       </div>
 
@@ -65,11 +66,19 @@ export default function StepBudget({ data, updateData, onNext }: StepBudgetProps
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5">
-                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Set it up for me</h3>
+                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
+                  {data.incomeType === 'none' ? 'Manage my savings' : 'Set it up for me'}
+                </h3>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Recommended
+                  {data.incomeType === 'none' ? 'Simplest' : 'Recommended'}
                 </span>
               </div>
+              
+              {data.incomeType === 'none' && !isAuto && (
+                <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                  We&apos;ll help you track expenses against your total pool.
+                </p>
+              )}
 
               {/* CSS grid expand — no JS measurement, correct initial height, smooth transition */}
               <div

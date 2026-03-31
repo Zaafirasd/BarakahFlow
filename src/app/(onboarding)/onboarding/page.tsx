@@ -21,8 +21,10 @@ export default function OnboardingPage() {
   const [data, setData] = useState<OnboardingData>({
     name: '',
     currency: 'AED',
+    incomeType: 'salary',
     payDay: 1,
     income: 0,
+    goldGrams: 0,
     bills: [],
     budgetChoice: 'auto',
     zakatEnabled: false,

@@ -67,28 +67,55 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
       <motion.div
         initial={false}
         animate={{
-          height: data.zakatEnabled ? contentHeight : 0,
+          height: data.zakatEnabled ? 'auto' : 0,
           opacity: data.zakatEnabled ? 1 : 0,
         }}
         transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-        className="w-full overflow-hidden"
+        className="w-full overflow-visible"
       >
-        <div ref={contentRef} className="w-full space-y-3 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
-          <div className="px-2 space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-              Zakat anniversary date
-            </label>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-              When did you first become eligible for Zakat? If unsure, use today&apos;s date.
-            </p>
+        <div className="w-full space-y-6 rounded-[2.5rem] border border-emerald-500/20 bg-emerald-500/5 p-6">
+          <div className="space-y-4">
+            <div className="px-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-emerald-600/60 dark:text-emerald-400/60">
+                Zakat anniversary date
+              </label>
+              <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                When did you first become eligible for Zakat?
+              </p>
+            </div>
+            <input
+              type="date"
+              value={data.zakatDate || ''}
+              onChange={(e) => updateData({ zakatDate: e.target.value })}
+              className="w-full box-border rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
+              id="onboarding-zakat-date"
+            />
           </div>
-          <input
-            type="date"
-            value={data.zakatDate || ''}
-            onChange={(e) => updateData({ zakatDate: e.target.value })}
-            className="w-full max-w-full box-border rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
-            id="onboarding-zakat-date"
-          />
+
+          <div className="space-y-4 pt-2 border-t border-emerald-500/10">
+            <div className="px-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-emerald-600/60 dark:text-emerald-400/60">
+                Gold Holding (Grams)
+              </label>
+              <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                Current weight of gold assets to track.
+              </p>
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={data.goldGrams || ''}
+                onChange={(e) => updateData({ goldGrams: parseFloat(e.target.value) || 0 })}
+                className="w-full box-border rounded-2xl border border-slate-200 bg-white pl-4 pr-16 py-4 text-base font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                id="onboarding-gold-grams"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                Grams
+              </div>
+            </div>
+          </div>
         </div>
       </motion.div>
 

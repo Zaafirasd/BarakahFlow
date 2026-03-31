@@ -45,8 +45,10 @@ export default function StepComplete({ data }: StepCompleteProps) {
         primary_currency: data.currency,
         financial_month_start_day: data.payDay,
         monthly_income: validateAmount(data.income) || 0,
+        income_type: data.incomeType,
         zakat_enabled: data.zakatEnabled,
         zakat_anniversary_date: data.zakatDate || null,
+        gold_grams: validateAmount(data.goldGrams) || 0,
         onboarding_completed: true,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
@@ -193,6 +195,12 @@ export default function StepComplete({ data }: StepCompleteProps) {
               <span className="text-slate-500 dark:text-slate-400">Zakat</span>
               <span className="font-medium text-slate-900 dark:text-white">{data.zakatEnabled ? 'On' : 'Off'}</span>
             </div>
+            {data.zakatEnabled && data.goldGrams > 0 && (
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Gold Holding</span>
+                <span className="font-medium text-slate-900 dark:text-white">{data.goldGrams}g</span>
+              </div>
+            )}
           </div>
         </Card>
       </motion.div>

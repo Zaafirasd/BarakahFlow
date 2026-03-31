@@ -5,6 +5,7 @@ export interface User {
   primary_currency: string;
   financial_month_start_day: number;
   monthly_income: number | null;
+  income_type: 'salary' | 'freelance' | 'none';
   zakat_enabled: boolean;
   zakat_anniversary_date: string | null;
   zakat_inputs?: any;
@@ -89,8 +90,10 @@ export interface OnboardingBill {
 export interface OnboardingData {
   name: string;
   currency: string;
+  incomeType: 'salary' | 'freelance' | 'none';
   payDay: number;
   income: number;
+  goldGrams: number;
   bills: OnboardingBill[];
   budgetChoice: 'auto' | 'manual';
   zakatEnabled: boolean;
