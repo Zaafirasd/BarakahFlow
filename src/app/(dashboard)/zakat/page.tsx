@@ -562,7 +562,7 @@ export default function ZakatPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-slate-900 dark:text-white leading-none">{transaction.merchant_name || transaction.category?.name}</p>
                       <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                        {new Date(transaction.date).toLocaleDateString('en-US', { month: 'SHORT', day: 'NUMERIC' })}
+                        {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </p>
                     </div>
                     <span className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(Math.abs(Number(transaction.amount)), currency)}</span>
