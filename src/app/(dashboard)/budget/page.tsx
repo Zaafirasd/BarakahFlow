@@ -436,98 +436,115 @@ export default function BudgetPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 overflow-hidden rounded-[2.2rem] border border-white/70 bg-white/82 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/76">
             {budgetItems.map((item, index) => {
               const isExpanded = expandedCategoryId === item.budget.category_id;
               const progressWidth = Math.min(item.percentage, 100);
               const barColor = getBudgetStatusColor(item.percentage);
 
               return (
-                <motion.div
-                  key={item.budget.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08 }}
-                  className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/82 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/76"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setExpandedCategoryId((current) => (current === item.budget.category_id ? null : item.budget.category_id))}
-                    className="w-full p-5 text-left"
+                <div key={item.budget.id}>
+                  {index > 0 && <div className="mx-6 border-t border-slate-100/60 dark:border-white/5" />}
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="overflow-hidden"
                   >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                        style={{ backgroundColor: `${item.budget.category.color}15`, color: item.budget.category.color }}
-                      >
-                        <LucideIcon name={item.budget.category.icon} className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <p className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                            {item.budget.category.name}
-                          </p>
-                          <p className={`text-sm font-extrabold ${item.overAmount > 0 ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400'}`}>
-                            {Math.round(item.percentage)}%
-                          </p>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCategoryId((current) => (current === item.budget.category_id ? null : item.budget.category_id))}
+                      className="w-full px-6 py-5 text-left transition-colors active:bg-slate-50/50 dark:active:bg-white/5"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
+                          style={{ backgroundColor: `${item.budget.category.color}15`, color: item.budget.category.color }}
+                        >
+                          <LucideIcon name={item.budget.category.icon} className="h-5 w-5" />
                         </div>
-                        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-                          {formatCurrency(item.spent, user?.primary_currency || 'AED')} of {formatCurrency(item.budget.amount, user?.primary_currency || 'AED')} spent
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+                              {item.budget.category.name}
+                            </p>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.overAmount > 0 ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>
+                              {Math.round(item.percentage)}%
+                            </span>
+                          </div>
+                          <div className="mt-1 flex items-center justify-between">
+                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                              <span className="text-slate-900 dark:text-white">
+                                {item.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              </span>
+                              <span className="mx-1 opacity-40">/</span>
+                              <span>{item.budget.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                              <span className="ml-1 text-[9px] uppercase tracking-wider">{user?.primary_currency || 'AED'}</span>
+                            </p>
+                            {item.remaining > 0 ? (
+                              <p className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider">
+                                {item.remaining.toLocaleString(undefined, { maximumFractionDigits: 0 })} left
+                              </p>
+                            ) : item.remaining < 0 ? (
+                              <p className="text-[10px] font-bold text-rose-500/80 uppercase tracking-wider">
+                                {Math.abs(item.remaining).toLocaleString(undefined, { maximumFractionDigits: 0 })} over
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/5">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressWidth}%` }}
+                              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: barColor }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </button>
 
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/5">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressWidth}%` }}
-                        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: barColor }}
-                      />
-                    </div>
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isExpanded ? (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: 'circOut' }}
-                        className="overflow-hidden border-t border-slate-100/60 bg-slate-50/70 dark:border-white/5 dark:bg-black/15"
-                      >
-                        <div className="space-y-3 p-5">
-                          {item.transactions.length === 0 ? (
-                            <p className="py-3 text-sm font-medium text-slate-500 dark:text-slate-400">No transactions recorded in this category for the selected month.</p>
-                          ) : (
-                            <>
-                              {item.transactions.slice(0, 5).map((transaction) => (
-                                <div key={transaction.id} className="flex items-center justify-between gap-3 rounded-[1.3rem] bg-white/80 px-4 py-3 dark:bg-white/5">
-                                  <div className="min-w-0">
-                                    <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
-                                      {transaction.merchant_name || transaction.description || item.budget.category.name}
-                                    </p>
-                                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{formatDateLabel(transaction.date)}</p>
+                    <AnimatePresence initial={false}>
+                      {isExpanded ? (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.28, ease: 'circOut' }}
+                          className="overflow-hidden border-t border-slate-100/60 bg-slate-50/70 dark:border-white/5 dark:bg-black/15"
+                        >
+                          <div className="space-y-3 p-5">
+                            {item.transactions.length === 0 ? (
+                              <p className="py-3 text-sm font-medium text-slate-500 dark:text-slate-400">No transactions recorded in this category for the selected month.</p>
+                            ) : (
+                              <>
+                                {item.transactions.slice(0, 5).map((transaction) => (
+                                  <div key={transaction.id} className="flex items-center justify-between gap-3 rounded-[1.3rem] bg-white/80 px-4 py-3 dark:bg-white/5">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                                        {transaction.merchant_name || transaction.description || item.budget.category.name}
+                                      </p>
+                                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{formatDateLabel(transaction.date)}</p>
+                                    </div>
+                                    <span className="text-sm font-extrabold text-slate-900 dark:text-white">{formatCurrency(Math.abs(Number(transaction.amount)), user?.primary_currency || 'AED')}</span>
                                   </div>
-                                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">{formatCurrency(Math.abs(Number(transaction.amount)), user?.primary_currency || 'AED')}</span>
-                                </div>
-                              ))}
+                                ))}
 
-                              <button
-                                type="button"
-                                onClick={() => router.push(`/transactions?category=${item.budget.category_id}&month=${referenceDate.toISOString().split('T')[0]}`)}
-                                className="w-full rounded-[1.3rem] bg-white px-4 py-3 text-sm font-bold text-emerald-500 transition active:scale-95 dark:bg-white/5"
-                              >
-                                View all {item.transactions.length} transactions {'->'}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
-                </motion.div>
+                                <button
+                                  type="button"
+                                  onClick={() => router.push(`/transactions?category=${item.budget.category_id}&month=${referenceDate.toISOString().split('T')[0]}`)}
+                                  className="w-full rounded-[1.3rem] bg-white px-4 py-3 text-sm font-bold text-emerald-500 transition active:scale-95 dark:bg-white/5"
+                                >
+                                  View all {item.transactions.length} transactions {'->'}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
+                  </motion.div>
+                </div>
               );
             })}
           </div>
