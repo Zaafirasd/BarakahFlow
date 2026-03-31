@@ -50,8 +50,20 @@ export default function DashboardPage() {
         .eq('id', authUser.id)
         .single();
 
-      if (profile) {
-        setUser(profile);
+        if (profile) {
+          // Check for local gold fallback
+          let localGold = 0;
+          if (typeof window !== 'undefined') {
+            const storedGold = localStorage.getItem(`barakahflow_gold_${profile.id}`);
+            if (storedGold) {
+              localGold = parseFloat(storedGold) || 0;
+            }
+          }
+
+          setUser({
+            ...profile,
+            gold_grams: profile.gold_grams || localGold
+          });
         if (typeof window !== 'undefined') {
           const stored = window.localStorage.getItem(getZakatStorageKey(profile.id));
           if (stored) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Coins, Save } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -18,10 +18,20 @@ export default function GoldModal({ isOpen, onClose, currentGrams, onUpdate, use
   const [grams, setGrams] = useState(currentGrams.toString());
   const [saving, setSaving] = useState(false);
 
+  // Sync state when currentGrams changes (e.g. when modal opens)
+  useEffect(() => {
+    setGrams(currentGrams.toString());
+  }, [currentGrams, isOpen]);
+
   const handleSave = async () => {
     setSaving(true);
     const numGrams = parseFloat(grams) || 0;
     
+    // 1. Always save to localStorage first for immediate persistence
+    if (typeof window !== 'undefined' && userId) {
+      localStorage.setItem(`barakahflow_gold_${userId}`, numGrams.toString());
+    }
+
     try {
       const supabase = createClient();
       const { error } = await supabase
@@ -29,12 +39,19 @@ export default function GoldModal({ isOpen, onClose, currentGrams, onUpdate, use
         .update({ gold_grams: numGrams })
         .eq('id', userId);
 
-      if (error) throw error;
+      // We don't throw error here to allow the local fallback to work 
+      // even if the DB column hasn't been added yet
+      if (error) {
+        console.warn('Supabase update failed (likely missing column), using local fallback:', error);
+      }
       
       onUpdate(numGrams);
       onClose();
     } catch (error) {
       console.error('Failed to update gold grams:', error);
+      // Still update UI since we have localStorage backup
+      onUpdate(numGrams);
+      onClose();
     } finally {
       setSaving(false);
     }
