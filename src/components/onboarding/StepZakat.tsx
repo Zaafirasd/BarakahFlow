@@ -12,11 +12,7 @@ interface StepZakatProps {
 
 export default function StepZakat({ data, updateData, onNext }: StepZakatProps) {
   return (
-    <motion.div 
-      layout="size"
-      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="flex flex-col gap-8"
-    >
+    <div className="flex flex-col gap-8">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Zakat tracking</h2>
         <p className="mt-1 text-slate-500 dark:text-slate-400">Do you want to track Zakat?</p>
@@ -64,7 +60,7 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
             className="overflow-hidden"
           >
             <div className="space-y-3 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
@@ -93,6 +89,6 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
           Continue
         </Button>
       </div>
-    </motion.div>
+    </div>
   );
 }
