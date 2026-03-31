@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarakahFlow Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.2);
+            --bg: #020617;
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 50% -20%, rgba(16, 185, 129, 0.1), transparent 40%),
+                radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.05), transparent 30%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to bottom right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .input-group {
+            max-width: 400px;
+            margin: 1.5rem auto;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            padding: 1.2rem 1.5rem;
+            border-radius: 1.2rem;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 1.2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 10px 20px var(--primary-glow);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 2rem;
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .table-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 2.5rem;
+            overflow: hidden;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #error-msg {
+            color: #fb7185;
+            font-weight: 700;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .badge-new { color: #10b981; }
+        .badge-transaction { color: #8b5cf6; }
+        .badge-bill { color: #f59e0b; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BarakaFlow Admin</h1>
+            <p class="subtitle">Zero-Knowledge Product Insights</p>
+        </header>
+
+        <section id="auth-section">
+            <div class="auth-card">
+                <h3>Secure Access</h3>
+                <p class="subtitle" style="font-size: 0.85rem; margin-top: 0.5rem;">Enter your API details to retrieve global stats.</p>
+                
+                <div class="input-group">
+                    <label style="display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;">Site URL</label>
+                    <input type="text" id="site-url" placeholder="http://localhost:3000" value="">
+                </div>
+
+                <div class="input-group">
+                    <label style="display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;">Admin API Key</label>
+                    <input type="password" id="api-key" placeholder="Enter Admin API Key..." value="">
+                </div>
+
+                <button onclick="fetchStats()" id="load-btn">Load Dashboard</button>
+                <div id="error-msg"></div>
+            </div>
+        </section>
+
+        <section id="dashboard-section" class="hidden">
+            <div class="stats-grid" id="totals-grid">
+                <!-- Totals populated here -->
+            </div>
+
+            <div class="table-container">
+                <h3 style="padding: 1.5rem 1.5rem 0.5rem; font-weight: 800; font-size: 1.1rem;">Last 30 Days Breakdown</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Growth</th>
+                            <th>Activity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="breakdown-body">
+                        <!-- Breakdown rows here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="text-align: center; margin-top: 3rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+                PRIVACY GUARANTEE: This dashboard only shows aggregate counts. No PII or user balances are fetched.
+            </p>
+        </section>
+    </div>
+
+    <script>
+        // Auto-fill origin if opened from the server
+        window.onload = () => {
+            const urlInput = document.getElementById('site-url');
+            if (window.location.origin.startsWith('http')) {
+                urlInput.value = window.location.origin;
+            } else {
+                urlInput.value = 'http://localhost:3000';
+            }
+        };
+
+        async function fetchStats() {
+            const baseUrl = document.getElementById('site-url').value.replace(/\/$/, '');
+            const key = document.getElementById('api-key').value;
+            const btn = document.getElementById('load-btn');
+            const errorEl = document.getElementById('error-msg');
+            
+            if (!key) {
+                errorEl.innerText = "Please enter a key.";
+                return;
+            }
+
+            errorEl.innerText = "";
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Connecting...';
+
+            try {
+                // Fetch using absolute URL if needed (for cross-origin or local file access)
+                const response = await fetch(`${baseUrl}/api/admin/stats`, {
+                    headers: {
+                        'x-admin-api-key': key
+                    }
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Access Denied');
+                }
+
+                const data = await response.json();
+                renderDashboard(data);
+                
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                errorEl.innerText = (err.message === "Failed to fetch") 
+                    ? "Connection Refused. Ensure your server is running at " + baseUrl 
+                    : err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Load Dashboard";
+            }
+        }
+
+        function renderDashboard(data) {
+            const grid = document.getElementById('totals-grid');
+            const body = document.getElementById('breakdown-body');
+            
+            const totalEvents = data.summary.total_events;
+            
+            // Render Totals
+            grid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalEvents.signups || 0}</div>
+                    <div class="stat-label">Total Signups</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalEvents.onboarding_completed || 0}</div>
+                    <div class="stat-label">Onboarding Completed</div>
+                </div>
+                <div class="stat-card" style="border-color: #8b5cf633">
+                    <div class="stat-value" style="color: #8b5cf6">${totalEvents.transactions_added || 0}</div>
+                    <div class="stat-label">Total Transactions</div>
+                </div>
+            `;
+
+            // Render Breakdown
+            const dates = Object.keys(data.daily_breakdown).sort().reverse();
+            
+            body.innerHTML = dates.map(date => {
+                const day = data.daily_breakdown[date];
+                return `
+                    <tr>
+                        <td style="color: var(--text-muted)">${new Date(date).toLocaleDateString('en-AE', { day: 'numeric', month: 'short' })}</td>
+                        <td>
+                            <div style="display: flex; gap: 15px;">
+                                <span><strong class="badge-new">+${day.signups || 0}</strong> Signups</span>
+                                <span><strong class="badge-new">+${day.onboarding_completed || 0}</strong> Onboarded</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 15px;">
+                                <span><strong class="badge-transaction">${day.transactions_added || 0}</strong> Txns</span>
+                                <span><strong class="badge-bill">${day.bills_added || 0}</strong> Bills</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>

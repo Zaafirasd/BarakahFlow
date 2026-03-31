@@ -1,0 +1,47 @@
+
+> barakaflow@0.1.0 dev
+> next dev -H 0.0.0.0
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://0.0.0.0:3000
+- Environments: .env.local
+✓ Ready in 1866ms
+
+ GET /signin 200 in 1236ms (next.js: 577ms, proxy.ts: 13ms, application-code: 646ms)
+ GET /signin 200 in 241ms (next.js: 27ms, proxy.ts: 42ms, application-code: 172ms)
+ GET /signin 200 in 316ms (next.js: 18ms, proxy.ts: 24ms, application-code: 274ms)
+ GET /signup 200 in 283ms (next.js: 169ms, proxy.ts: 22ms, application-code: 92ms)
+ GET /onboarding 200 in 1105ms (next.js: 152ms, proxy.ts: 831ms, application-code: 122ms)
+ GET /onboarding 200 in 843ms (next.js: 7ms, proxy.ts: 599ms, application-code: 237ms)
+ GET /dashboard 200 in 934ms (next.js: 70ms, proxy.ts: 806ms, application-code: 58ms)
+ GET /budget 200 in 820ms (next.js: 48ms, proxy.ts: 730ms, application-code: 43ms)
+ GET /more 200 in 915ms (next.js: 149ms, proxy.ts: 715ms, application-code: 50ms)
+○ Compiling /bills ...
+ GET /bills 200 in 3.8s (next.js: 3.1s, proxy.ts: 606ms, application-code: 53ms)
+ GET /transactions 200 in 1401ms (next.js: 142ms, proxy.ts: 1153ms, application-code: 105ms)
+ GET /add-transaction 200 in 741ms (next.js: 116ms, proxy.ts: 587ms, application-code: 38ms)
+ GET /add-transaction 200 in 728ms (next.js: 15ms, proxy.ts: 620ms, application-code: 92ms)
+ GET /add-transaction 200 in 671ms (next.js: 6ms, proxy.ts: 631ms, application-code: 34ms)
+✓ Compiled in 403ms
+ GET /add-transaction 200 in 816ms (next.js: 6ms, proxy.ts: 779ms, application-code: 30ms)
+ GET /add-transaction 200 in 753ms (next.js: 6ms, proxy.ts: 709ms, application-code: 38ms)
+ GET /dashboard 200 in 754ms (next.js: 8ms, proxy.ts: 704ms, application-code: 41ms)
+ GET /budget 200 in 751ms (next.js: 8ms, proxy.ts: 691ms, application-code: 52ms)
+ GET /transactions 200 in 612ms (next.js: 10ms, proxy.ts: 562ms, application-code: 40ms)
+ GET /signin 200 in 115ms (next.js: 8ms, proxy.ts: 5ms, application-code: 103ms)
+ GET /dashboard 200 in 666ms (next.js: 6ms, proxy.ts: 629ms, application-code: 32ms)
+ GET /add-transaction 200 in 583ms (next.js: 6ms, proxy.ts: 536ms, application-code: 40ms)
+ GET /dashboard 200 in 1004ms (next.js: 18ms, proxy.ts: 590ms, application-code: 396ms)
+ GET /transactions 200 in 729ms (next.js: 7ms, proxy.ts: 687ms, application-code: 35ms)
+ GET /dashboard 200 in 778ms (next.js: 17ms, proxy.ts: 680ms, application-code: 80ms)
+ GET /more 200 in 725ms (next.js: 19ms, proxy.ts: 598ms, application-code: 108ms)
+ GET /profile 200 in 1582ms (next.js: 1016ms, proxy.ts: 527ms, application-code: 39ms)
+ GET /bills 200 in 988ms (next.js: 225ms, proxy.ts: 666ms, application-code: 97ms)
+ GET /dashboard 200 in 757ms (next.js: 16ms, proxy.ts: 662ms, application-code: 80ms)
+ GET /budget 200 in 754ms (next.js: 15ms, proxy.ts: 640ms, application-code: 99ms)
+ GET /transactions 200 in 774ms (next.js: 10ms, proxy.ts: 732ms, application-code: 33ms)
+ GET /more 200 in 685ms (next.js: 6ms, proxy.ts: 634ms, application-code: 44ms)
+ GET /signin 200 in 121ms (next.js: 14ms, proxy.ts: 14ms, application-code: 94ms)
+ GET /signup 200 in 132ms (next.js: 19ms, proxy.ts: 14ms, application-code: 99ms)
+ GET /onboarding 200 in 703ms (next.js: 15ms, proxy.ts: 607ms, application-code: 82ms)

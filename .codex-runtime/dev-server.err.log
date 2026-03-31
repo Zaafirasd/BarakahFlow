@@ -1,0 +1,45 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[browser] Image with src "/logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] In HTML, <button> cannot be a descendant of <button>.
+This will cause a hydration error.
+
+  ...
+    <SegmentViewNode type="page" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <ClientPageRoot Component={function BillsPage} serverProvidedParams={{...}}>
+        <BillsPage params={Promise} searchParams={Promise}>
+          <PageTransition>
+            <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:0.35, ...}}>
+              <div style={{opacity:0, ...}} ref={function useMotionRef.useCallback}>
+                <div className="min-h-scre...">
+                  <PageHeader>
+                  <Card>
+                  <div className="mt-8 space...">
+                    <section>
+                      <div>
+                      <div className="space-y-3">
+                        <motion.button type="button" whileTap={{scale:0.99}} onClick={function onClick} ...>
+>                         <button
+>                           type="button"
+>                           onClick={function onClick}
+>                           className="w-full rounded-[2rem] border border-white/70 bg-white/82 p-5 text-left shadow-[..."
+>                           tabIndex={0}
+>                           style={{}}
+>                           ref={function useMotionRef.useCallback}
+>                         >
+                            <div>
+                            <div className="mt-4 flex ...">
+                              <div>
+>                             <button
+>                               type="button"
+>                               onClick={function onClick}
+>                               className="rounded-full border border-emerald-500/30 px-3 py-1.5 text-xs font-bold tex..."
+>                             >
+                    ...
+                  ...
+    ...
+ 
+[browser] <button> cannot contain a nested <button>.
+See this log for the ancestor stack trace. 
+[browser] Image with src "/logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+^C

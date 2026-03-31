@@ -1,0 +1,22 @@
+
+> barakaflow@0.1.0 dev
+> next dev -H 0.0.0.0 --hostname 0.0.0.0
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://0.0.0.0:3000
+- Environments: .env.local
+✓ Ready in 1249ms
+
+ GET /signin 200 in 1096ms (next.js: 322ms, proxy.ts: 216ms, application-code: 558ms)
+ GET /signin 200 in 112ms (next.js: 10ms, proxy.ts: 15ms, application-code: 88ms)
+ GET /signin 200 in 193ms (next.js: 14ms, proxy.ts: 16ms, application-code: 163ms)
+ GET /signin 200 in 172ms (next.js: 13ms, proxy.ts: 14ms, application-code: 145ms)
+ GET /signup 200 in 198ms (next.js: 99ms, proxy.ts: 17ms, application-code: 82ms)
+ GET /onboarding 200 in 955ms (next.js: 102ms, proxy.ts: 782ms, application-code: 71ms)
+ GET /onboarding 200 in 1066ms (next.js: 8ms, proxy.ts: 795ms, application-code: 262ms)
+ GET /dashboard 200 in 785ms (next.js: 107ms, proxy.ts: 608ms, application-code: 71ms)
+ GET /budget 200 in 781ms (next.js: 103ms, proxy.ts: 605ms, application-code: 73ms)
+ GET /more 200 in 1305ms (next.js: 111ms, proxy.ts: 1124ms, application-code: 70ms)
+ GET /bills 200 in 983ms (next.js: 100ms, proxy.ts: 824ms, application-code: 59ms)
+ GET /bills 200 in 1478ms (next.js: 13ms, proxy.ts: 720ms, application-code: 746ms)
