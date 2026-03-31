@@ -47,9 +47,21 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-500">per month</p>
       </div>
 
-      <Button onClick={onNext} fullWidth size="lg">
-        Continue
-      </Button>
+      <div className="space-y-4 pt-4">
+        <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
+          Continue
+        </Button>
+        <button
+          type="button"
+          onClick={() => {
+            updateData({ income: 0 });
+            onNext();
+          }}
+          className="w-full text-xs font-black uppercase tracking-[0.1em] text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-300"
+        >
+          Skip this if you don&apos;t have a steady income
+        </button>
+      </div>
     </div>
   );
 }

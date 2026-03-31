@@ -22,7 +22,14 @@ export const metadata: Metadata = {
     title: "BarakaFlow",
   },
   icons: {
-    apple: "/icon-512.png",
+    icon: [
+      { url: "/icon-192.png?v=2" },
+      { url: "/icon-512.png?v=2" },
+    ],
+    apple: [
+      { url: "/icon-512.png?v=2" },
+      { url: "/apple-touch-icon.png?v=2", sizes: "180x180", rel: "apple-touch-icon" },
+    ],
   },
 };
 

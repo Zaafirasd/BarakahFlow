@@ -22,11 +22,12 @@ export default function StepZakat({ data, updateData, onNext }: StepZakatProps) 
         <div className="relative flex w-full max-w-[280px] items-center rounded-2xl bg-slate-100 p-1.5 dark:bg-white/5">
           {/* Animated Background Selector */}
           <motion.div
-            className="absolute h-[calc(100%-12px)] w-[calc(50%-6px)] rounded-xl shadow-sm"
+            className={`absolute h-[calc(100%-12px)] w-[calc(50%-6px)] rounded-xl shadow-sm ${
+              data.zakatEnabled ? 'bg-emerald-500' : 'bg-white dark:bg-slate-600'
+            }`}
             initial={false}
             animate={{
               x: data.zakatEnabled ? '100%' : '0%',
-              backgroundColor: data.zakatEnabled ? '#10b981' : (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#1e293b' : '#ffffff'),
             }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           />
