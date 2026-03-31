@@ -581,19 +581,19 @@ export default function BudgetPage() {
         >
           <div className="space-y-6">
             <div className="rounded-[1.8rem] bg-slate-50 p-5 dark:bg-white/5">
-              <div className="grid grid-cols-3 gap-3">
-                <div>
+              <div className="flex flex-wrap gap-x-4 gap-y-5 sm:grid sm:grid-cols-3 sm:gap-3">
+                <div className="min-w-[100px] flex-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Monthly Income</p>
                   <p className="mt-2 text-sm font-extrabold text-slate-900 dark:text-white">{formatCurrency(monthlyIncome, user?.primary_currency || 'AED')}</p>
                 </div>
-                <div>
+                <div className="min-w-[100px] flex-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Total Budgeted</p>
                   <p className="mt-2 text-sm font-extrabold text-slate-900 dark:text-white">
                     {formatCurrency(totalBudgetedDraft, user?.primary_currency || 'AED')}
                     {monthlyIncome > 0 ? ` (${Math.round((totalBudgetedDraft / monthlyIncome) * 100)}%)` : ''}
                   </p>
                 </div>
-                <div>
+                <div className="min-w-[100px] flex-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Unallocated</p>
                   <p className={`mt-2 text-sm font-extrabold ${unallocatedIncome < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                     {formatCurrency(unallocatedIncome, user?.primary_currency || 'AED')}
