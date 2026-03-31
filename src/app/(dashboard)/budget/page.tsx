@@ -581,21 +581,23 @@ export default function BudgetPage() {
         >
           <div className="space-y-6">
             <div className="rounded-[1.8rem] bg-slate-50 p-5 dark:bg-white/5">
-              <div className="flex flex-wrap gap-x-4 gap-y-5 sm:grid sm:grid-cols-3 sm:gap-3">
-                <div className="min-w-[100px] flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Monthly Income</p>
-                  <p className="mt-2 text-sm font-extrabold text-slate-900 dark:text-white">{formatCurrency(monthlyIncome, user?.primary_currency || 'AED')}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 sm:gap-3">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 sm:tracking-[0.18em]">Monthly Income</p>
+                  <p className="text-sm font-extrabold text-slate-900 dark:text-white">{formatCurrency(monthlyIncome, user?.primary_currency || 'AED')}</p>
                 </div>
-                <div className="min-w-[100px] flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Total Budgeted</p>
-                  <p className="mt-2 text-sm font-extrabold text-slate-900 dark:text-white">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 sm:tracking-[0.18em]">Total Budgeted</p>
+                  <p className="text-sm font-extrabold text-slate-900 dark:text-white">
                     {formatCurrency(totalBudgetedDraft, user?.primary_currency || 'AED')}
-                    {monthlyIncome > 0 ? ` (${Math.round((totalBudgetedDraft / monthlyIncome) * 100)}%)` : ''}
+                    <span className="block text-[10px] font-medium opacity-60">
+                      {monthlyIncome > 0 ? `(${Math.round((totalBudgetedDraft / monthlyIncome) * 100)}%)` : ''}
+                    </span>
                   </p>
                 </div>
-                <div className="min-w-[100px] flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Unallocated</p>
-                  <p className={`mt-2 text-sm font-extrabold ${unallocatedIncome < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                <div className="col-span-2 space-y-1 border-t border-slate-200/50 pt-4 dark:border-white/5 sm:col-span-1 sm:border-t-0 sm:pt-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 sm:tracking-[0.18em]">Unallocated</p>
+                  <p className={`text-sm font-extrabold ${unallocatedIncome < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                     {formatCurrency(unallocatedIncome, user?.primary_currency || 'AED')}
                   </p>
                 </div>
