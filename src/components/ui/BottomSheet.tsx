@@ -76,7 +76,10 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
 
               {/* Pinned Footer — in normal flow so scroll can never push it off screen */}
               {footer && (
-                <div className="shrink-0 border-t border-slate-100 bg-white p-6 dark:border-white/5 dark:bg-slate-900">
+                <div
+                  className="shrink-0 border-t border-slate-100 bg-white px-6 pt-4 dark:border-white/5 dark:bg-slate-900"
+                  style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+                >
                   {footer}
                 </div>
               )}
