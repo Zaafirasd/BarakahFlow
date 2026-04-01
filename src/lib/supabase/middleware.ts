@@ -43,7 +43,7 @@ export const updateSession = async (request: NextRequest) => {
   // Routes where signed-in users should be redirected away (to dashboard)
   const authRoutes = ["/signin", "/signup", "/forgot-password", "/reset-password"];
   // Routes accessible by everyone (signed in or not)
-  const publicInfoRoutes = ["/privacy-policy"];
+  const publicInfoRoutes = ["/privacy-policy", "/email-verified"];
   
   const isAuthRoute = authRoutes.includes(pathname);
   const isPublicInfoRoute = publicInfoRoutes.includes(pathname);
