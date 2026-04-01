@@ -110,6 +110,27 @@
   }
 }
 
+/* Page entry animation — replaces framer-motion PageTransition */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.animate-page-in {
+  animation: page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger children animation — replaces framer-motion StaggerContainer */
+.stagger-container > .stagger-item {
+  animation: page-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger-container > .stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-container > .stagger-item:nth-child(2) { animation-delay: 60ms; }
+.stagger-container > .stagger-item:nth-child(3) { animation-delay: 120ms; }
+.stagger-container > .stagger-item:nth-child(4) { animation-delay: 180ms; }
+.stagger-container > .stagger-item:nth-child(5) { animation-delay: 240ms; }
+.stagger-container > .stagger-item:nth-child(6) { animation-delay: 300ms; }
+
 @keyframes glow-pulse {
   0%,
   100% {

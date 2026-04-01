@@ -28,11 +28,28 @@ interface CategoryBudgetRowProps {
 }
 
 function CategoryBudgetRow({ category, value, onChange }: CategoryBudgetRowProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
   const isZeroState = !value || Number(value) === 0;
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    // Smoothly scroll to the center of the viewport after a tiny delay for mobile keyboard
+    setTimeout(() => {
+      rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   return (
     <div
-      className={`rounded-[1.8rem] border p-4 transition ${isZeroState ? 'border-slate-200/70 bg-slate-50/70 opacity-80 dark:border-white/5 dark:bg-white/5' : 'border-slate-200 bg-white dark:border-white/10 dark:bg-white/5'}`}
+      ref={rowRef}
+      className={`rounded-[1.8rem] border p-4 transition-all duration-300 ${
+        isFocused
+          ? 'border-emerald-500 bg-emerald-500/[0.02] shadow-[0_8px_30px_rgba(16,185,129,0.08)] ring-4 ring-emerald-500/10'
+          : isZeroState
+          ? 'border-slate-200/70 bg-slate-50/70 opacity-80 dark:border-white/5 dark:bg-white/5'
+          : 'border-slate-200 bg-white dark:border-white/10 dark:bg-white/5'
+      }`}
     >
       <div className="flex items-center gap-4">
         <div
@@ -48,6 +65,8 @@ function CategoryBudgetRow({ category, value, onChange }: CategoryBudgetRowProps
           type="number"
           inputMode="decimal"
           value={value}
+          onFocus={handleFocus}
+          onBlur={() => setIsFocused(false)}
           onChange={(event) => onChange(category.id, event.target.value)}
           placeholder="0"
           className="w-24 shrink-0 rounded-[1.2rem] border border-slate-200 bg-white px-3 py-4 text-right text-sm font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-slate-900 dark:text-white"

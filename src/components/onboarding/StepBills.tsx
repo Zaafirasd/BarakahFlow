@@ -232,14 +232,16 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
         </button>
       </div>
 
-      <div className="flex flex-col items-center gap-4 pt-4">
-        <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
-          Continue
-        </Button>
-        <button type="button" onClick={onNext} className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white">
-          I&apos;ll Add Them Later
-        </button>
-      </div>
+      {!isSheetOpen && (
+        <div className="flex flex-col items-center gap-4 pt-4">
+          <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
+            Continue
+          </Button>
+          <button type="button" onClick={onNext} className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white">
+            I&apos;ll Add Them Later
+          </button>
+        </div>
+      )}
     </div>
   );
 }

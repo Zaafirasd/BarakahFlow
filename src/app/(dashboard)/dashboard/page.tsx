@@ -18,6 +18,24 @@ import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 
+// Module-level cache so navigating away and back doesn't re-fetch everything
+interface DashboardData {
+  user: User;
+  transactions: Transaction[];
+  allTransactions: Transaction[];
+  accounts: Account[];
+  budgets: Budget[];
+  bills: Bill[];
+  goldPrice: number;
+  isGoldCached: boolean;
+}
+let _cache: (DashboardData & { ts: number }) | null = null;
+const CACHE_TTL = 30_000; // 30 seconds
+
+export function invalidateDashboardCache() {
+  _cache = null;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
@@ -39,6 +57,31 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    // Serve from cache if still fresh — avoids full re-fetch on every tab navigation
+    if (_cache && Date.now() - _cache.ts < CACHE_TTL) {
+      const c = _cache;
+      setUser(c.user);
+      setTransactions(c.transactions);
+      setAllTransactions(c.allTransactions);
+      setAccounts(c.accounts);
+      setBudgets(c.budgets);
+      setBills(c.bills);
+      setGoldPrice(c.goldPrice);
+      setIsGoldCached(c.isGoldCached);
+      // Load zakat from localStorage (always fresh, no network call needed)
+      try {
+        const stored = localStorage.getItem(getZakatStorageKey(c.user.id));
+        if (stored) {
+          const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
+          setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
+        } else {
+          setZakatEstimate(null);
+        }
+      } catch { setZakatEstimate(null); }
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       setLoading(true);
       setError('');
@@ -64,39 +107,38 @@ export default function DashboardPage() {
           throw new Error(profileError?.message || 'Unable to load your dashboard profile.');
         }
 
-          // Check for local gold fallback
-          let localGold = 0;
-          if (typeof window !== 'undefined') {
-            try {
-              const storedGold = localStorage.getItem(`barakahflow_gold_${profile.id}`);
-              if (storedGold) localGold = parseFloat(storedGold) || 0;
-            } catch {
-              // localStorage unavailable (e.g. private browsing restrictions)
-            }
-          }
+        // Load local gold fallback
+        let localGold = 0;
+        try {
+          const storedGold = localStorage.getItem(`barakahflow_gold_${profile.id}`);
+          if (storedGold) localGold = parseFloat(storedGold) || 0;
+        } catch { /* localStorage unavailable */ }
 
-          setUser({
-            ...profile,
-            gold_grams: profile.gold_grams || localGold,
-          });
+        const userWithGold: User = { ...profile, gold_grams: profile.gold_grams || localGold };
+        setUser(userWithGold);
 
-        if (typeof window !== 'undefined') {
-          const stored = window.localStorage.getItem(getZakatStorageKey(profile.id));
+        // Load zakat estimate from localStorage (no network needed)
+        try {
+          const stored = localStorage.getItem(getZakatStorageKey(profile.id));
           if (stored) {
-            try {
-              const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
-              setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
-            } catch {
-              setZakatEstimate(null);
-            }
+            const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
+            setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
           } else {
             setZakatEstimate(null);
           }
-        }
+        } catch { setZakatEstimate(null); }
 
         const { start, end } = getFinancialMonthRange(profile.financial_month_start_day);
 
-        const [monthTransactionsResult, allTransactionsResult, accountsResult, budgetResult, billResult] = await Promise.all([
+        // Fetch all data in parallel — gold price included, no longer sequential
+        const [
+          monthTransactionsResult,
+          allTransactionsResult,
+          accountsResult,
+          budgetResult,
+          billResult,
+          goldRes,
+        ] = await Promise.all([
           supabase
             .from('transactions')
             .select('*, category:categories(*)')
@@ -125,6 +167,7 @@ export default function DashboardPage() {
             .eq('is_active', true)
             .order('next_due_date', { ascending: true })
             .limit(3),
+          fetch('/api/gold-price').catch(() => null),
         ]);
 
         const firstError =
@@ -138,25 +181,44 @@ export default function DashboardPage() {
           throw new Error(firstError.message);
         }
 
-        setTransactions((monthTransactionsResult.data || []) as Transaction[]);
-        setAllTransactions((allTransactionsResult.data || []) as Transaction[]);
-        setAccounts((accountsResult.data || []) as Account[]);
-        setBudgets((budgetResult.data || []) as Budget[]);
-        setBills((billResult.data || []) as Bill[]);
+        const txns = (monthTransactionsResult.data || []) as Transaction[];
+        const allTxns = (allTransactionsResult.data || []) as Transaction[];
+        const accs = (accountsResult.data || []) as Account[];
+        const budgts = (budgetResult.data || []) as Budget[];
+        const blls = (billResult.data || []) as Bill[];
 
-        // 4. Fetch Live Gold Price
-        try {
-          const goldRes = await fetch('/api/gold-price');
-          if (goldRes.ok) {
-            const goldData = await goldRes.json();
+        let gPrice = 286.45;
+        let gCached = true;
+        if (goldRes?.ok) {
+          try {
+            const goldData = await goldRes.json() as { price_per_gram?: number; cached?: boolean };
             if (goldData.price_per_gram) {
-              setGoldPrice(goldData.price_per_gram);
-              setIsGoldCached(Boolean(goldData.cached));
+              gPrice = goldData.price_per_gram;
+              gCached = Boolean(goldData.cached);
             }
-          }
-        } catch {
-          // Silent fallback to default 286.45
+          } catch { /* use default */ }
         }
+
+        setTransactions(txns);
+        setAllTransactions(allTxns);
+        setAccounts(accs);
+        setBudgets(budgts);
+        setBills(blls);
+        setGoldPrice(gPrice);
+        setIsGoldCached(gCached);
+
+        // Cache results for fast return navigation
+        _cache = {
+          user: userWithGold,
+          transactions: txns,
+          allTransactions: allTxns,
+          accounts: accs,
+          budgets: budgts,
+          bills: blls,
+          goldPrice: gPrice,
+          isGoldCached: gCached,
+          ts: Date.now(),
+        };
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load your dashboard right now.');
       } finally {
@@ -164,11 +226,7 @@ export default function DashboardPage() {
       }
     };
 
-    const frame = window.requestAnimationFrame(() => {
-      void fetchData();
-    });
-
-    return () => window.cancelAnimationFrame(frame);
+    void fetchData();
   }, []);
 
   const today = new Date().toLocaleDateString('en-US', {
@@ -184,8 +242,6 @@ export default function DashboardPage() {
     <PageTransition>
       <div className="relative min-h-screen overflow-hidden px-5 pb-28 pt-4">
         <div className="absolute inset-x-0 top-0 h-80 rounded-b-[3.5rem] bg-gradient-to-br from-rose-200/90 via-violet-200/80 to-sky-200/70 dark:from-rose-400/20 dark:via-indigo-500/15 dark:to-sky-400/10" />
-        <div className="absolute right-[-5rem] top-24 h-48 w-48 rounded-full bg-white/40 blur-3xl dark:bg-cyan-400/5" />
-        <div className="absolute left-[-4rem] top-8 h-40 w-40 rounded-full bg-rose-100/60 blur-3xl dark:bg-fuchsia-400/5" />
 
         <div className="relative">
           <div className="mb-6 flex items-start justify-between gap-4 pt-2">
@@ -228,10 +284,10 @@ export default function DashboardPage() {
           <StaggerContainer className="flex flex-col gap-3.5">
 
             <StaggerItem>
-              <BalanceCard 
-                transactions={transactions} 
+              <BalanceCard
+                transactions={transactions}
                 totalBalance={calculateAccountsTotal(accounts, allTransactions)}
-                currency={user?.primary_currency || 'AED'} 
+                currency={user?.primary_currency || 'AED'}
               />
             </StaggerItem>
 
@@ -251,9 +307,9 @@ export default function DashboardPage() {
             </StaggerItem>
 
             <StaggerItem>
-              <GoldCard 
-                grams={user?.gold_grams || 0} 
-                currency={user?.primary_currency || 'AED'} 
+              <GoldCard
+                grams={user?.gold_grams || 0}
+                currency={user?.primary_currency || 'AED'}
                 pricePerGram={goldPrice}
                 isCachedPrice={isGoldCached}
                 onManage={() => setIsGoldModalOpen(true)}
@@ -263,12 +319,12 @@ export default function DashboardPage() {
             {user?.zakat_enabled && (
               <StaggerItem>
                 <button type="button" onClick={() => router.push('/zakat')} className="block w-full text-left">
-                  <ZakatCard 
+                  <ZakatCard
                     zakatDate={user.zakat_anniversary_date}
                     balance={calculateAccountsTotal(accounts, allTransactions)}
                     currency={user.primary_currency || 'AED'}
                     estimate={zakatEstimate}
-                    goldValue={(user.gold_grams || 0) * goldPrice} 
+                    goldValue={(user.gold_grams || 0) * goldPrice}
                     goldPrice={goldPrice}
                   />
                 </button>
@@ -284,7 +340,10 @@ export default function DashboardPage() {
           userId={user?.id || ''}
           onUpdate={(newGrams) => {
             if (user) {
-              setUser({ ...user, gold_grams: newGrams });
+              const updated = { ...user, gold_grams: newGrams };
+              setUser(updated);
+              // Keep cache in sync so the update survives navigation
+              if (_cache) _cache = { ..._cache, user: updated };
             }
           }}
         />

@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ArrowLeftRight, Plus, PieChart, Menu } from 'lucide-react';
-import { motion } from 'framer-motion';
 import OfflineBanner from '@/components/ui/OfflineBanner';
 
 const tabs = [
@@ -48,15 +47,13 @@ export default function DashboardLayout({
               if (tab.isCenter) {
                 return (
                   <div key={tab.name} className="flex justify-center">
-                    <motion.button
-                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                      whileTap={{ scale: 0.9 }}
+                    <button
                       onClick={() => router.push(tab.href)}
-                      className="flex h-14 w-14 -mt-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg shadow-slate-900/20 transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:shadow-black/30 dark:hover:bg-slate-100"
+                      className="flex h-14 w-14 -mt-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg shadow-slate-900/20 transition-transform duration-200 hover:bg-slate-800 active:scale-90 dark:bg-white dark:text-slate-950 dark:shadow-black/30 dark:hover:bg-slate-100"
                       aria-label="Add transaction"
                     >
                       <Icon className="w-7 h-7" />
-                    </motion.button>
+                    </button>
                   </div>
                 );
               }
