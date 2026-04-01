@@ -67,13 +67,13 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
               )}
 
               {/* Scrolling Content */}
-              <div className="flex-1 overflow-y-auto px-6 pb-24">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-4">
                 {children}
               </div>
 
-              {/* Pinned Footer */}
+              {/* Pinned Footer — in normal flow so scroll can never push it off screen */}
               {footer && (
-                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-slate-900 dark:via-slate-900/95 pointer-events-auto">
+                <div className="shrink-0 border-t border-slate-100 bg-white p-6 dark:border-white/5 dark:bg-slate-900">
                   {footer}
                 </div>
               )}
