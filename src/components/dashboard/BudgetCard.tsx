@@ -19,7 +19,7 @@ interface BudgetCardProps {
 export default function BudgetCard({ budgets, transactions, currency, startDay }: BudgetCardProps) {
   const router = useRouter();
 
-  const totalBudgeted = useMemo(() => budgets.reduce((sum, budget) => sum + budget.amount, 0), [budgets]);
+  const totalBudgeted = useMemo(() => budgets.reduce((sum, budget) => sum + Number(budget.amount), 0), [budgets]);
   const totalSpent = useMemo(
     () => transactions.filter(t => t.type === 'expense').reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
     [transactions]
@@ -34,7 +34,7 @@ export default function BudgetCard({ budgets, transactions, currency, startDay }
   );
 
   return (
-    <button type="button" onClick={() => router.push('/budget')} className="block w-full text-left">
+    <button type="button" onClick={() => router.push('/budget')} className="group block w-full text-left">
       <Card className="border border-white/70 bg-white/82 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-transform hover:-translate-y-0.5 dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_50px_rgba(0,0,0,0.32)]">
         <div className="flex items-center justify-between gap-6">
           <div className="min-w-0 flex-1">

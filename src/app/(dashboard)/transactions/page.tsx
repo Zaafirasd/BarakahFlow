@@ -10,6 +10,7 @@ import { sanitizeText, validateAmount } from '@/lib/utils/validation';
 import { trackEvent, METRICS } from '@/lib/utils/analytics';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
+import PageTransition from '@/components/ui/PageTransition';
 import type { Category, Transaction, User } from '@/types';
 import * as LucideIcons from 'lucide-react';
 
@@ -212,6 +213,7 @@ function TransactionsPageContent() {
   }
 
   return (
+    <PageTransition>
     <div className="p-5 pb-32">
       <h1 className="mb-1 text-2xl font-semibold text-slate-900 dark:text-white">Transactions</h1>
       <p className="text-sm text-slate-500 dark:text-slate-400">{monthLabel}</p>
@@ -409,6 +411,7 @@ function TransactionsPageContent() {
         )}
       </BottomSheet>
     </div>
+    </PageTransition>
   );
 }
 

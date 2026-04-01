@@ -31,14 +31,14 @@ export default function DashboardLayout({
   }, []);
 
   return (
-    <div className={`min-h-screen ${isAddTransaction ? '' : 'pb-24'}`}>
+    <div className={`min-h-screen ${isAddTransaction ? '' : 'pb-32'}`} style={isAddTransaction ? undefined : { paddingBottom: 'max(8rem, calc(6rem + env(safe-area-inset-bottom)))' }}>
       <OfflineBanner />
       {/* Page Content */}
       {children}
 
       {/* Bottom Tab Bar */}
       {!isAddTransaction && (
-        <nav className="bottom-nav fixed bottom-4 left-0 right-0 z-50 px-4">
+        <nav className="bottom-nav fixed left-0 right-0 z-50 px-4" style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="mx-auto grid max-w-sm grid-cols-5 items-center rounded-full border border-slate-200/80 bg-white/88 px-2 py-2 shadow-[0_18px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/80 dark:shadow-[0_22px_60px_rgba(0,0,0,0.45)]">
             {tabs.map(tab => {
               const isActive = pathname === tab.href;

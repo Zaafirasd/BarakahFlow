@@ -96,8 +96,16 @@ export function calculateNextDueDate(
   return candidate;
 }
 
+function parseDateSafe(date: Date | string): Date {
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, d] = date.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return typeof date === 'string' ? new Date(date) : new Date(date);
+}
+
 export function daysUntil(date: Date | string): number {
-  const target = typeof date === 'string' ? new Date(date) : date;
+  const target = parseDateSafe(date);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   target.setHours(0, 0, 0, 0);
@@ -106,7 +114,7 @@ export function daysUntil(date: Date | string): number {
 }
 
 export function formatDateLabel(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = parseDateSafe(dateStr);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);

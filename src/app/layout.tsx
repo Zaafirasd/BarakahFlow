@@ -13,13 +13,13 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "BarakaFlow — Halal Personal Finance",
-  description: "Track your income, expenses, and Zakat with BarakaFlow — the halal budgeting app for Muslims in the UAE.",
+  title: "BarakahFlow — Halal Personal Finance",
+  description: "Track your income, expenses, and Zakat with BarakahFlow — the halal budgeting app for Muslims in the UAE.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "BarakaFlow",
+    title: "BarakahFlow",
   },
   icons: {
     icon: [

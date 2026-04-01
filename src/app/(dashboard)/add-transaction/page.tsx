@@ -80,7 +80,7 @@ export default function AddTransactionPage() {
     };
 
     fetchData();
-  }, [selectedCategory, type, user]);
+  }, [selectedCategory, type]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     const validatedAmount = validateAmount(amount);
