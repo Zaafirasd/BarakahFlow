@@ -55,7 +55,7 @@ export default function BillsCard({ bills, currency }: BillsCardProps) {
           </p>
         </div>
 
-        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${isOverdue ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-100 text-slate-400 dark:bg-white/5 dark:text-slate-500'}`}>
+        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl transition-colors ${isOverdue ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 dark:bg-white/5 dark:text-slate-500 dark:group-hover:bg-white/10'}`}>
           {isOverdue ? <AlertTriangle className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
         </div>
       </div>

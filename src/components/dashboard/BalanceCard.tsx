@@ -1,3 +1,6 @@
+'use client';
+
+import { memo, useMemo } from 'react';
 import { TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import Card from '@/components/ui/Card';
@@ -9,16 +12,16 @@ interface BalanceCardProps {
   currency: string;
 }
 
-export default function BalanceCard({ transactions, totalBalance, currency }: BalanceCardProps) {
-  const income = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  const expenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  const net = income - expenses;
+export default memo(function BalanceCard({ transactions, totalBalance, currency }: BalanceCardProps) {
+  const { income, expenses, net } = useMemo(() => {
+    let inc = 0;
+    let exp = 0;
+    for (const t of transactions) {
+      if (t.type === 'income') inc += Math.abs(t.amount);
+      else exp += Math.abs(t.amount);
+    }
+    return { income: inc, expenses: exp, net: inc - exp };
+  }, [transactions]);
 
   return (
     <Card className="border border-white/70 bg-white/82 shadow-[0_22px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_50px_rgba(0,0,0,0.32)]">
@@ -72,4 +75,4 @@ export default function BalanceCard({ transactions, totalBalance, currency }: Ba
       </div>
     </Card>
   );
-}
+});

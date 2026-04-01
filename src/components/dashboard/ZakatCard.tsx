@@ -55,7 +55,7 @@ export default function ZakatCard({ zakatDate, balance, currency, estimate, gold
           </p>
         </div>
 
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-colors group-hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:group-hover:bg-emerald-500/25">
           <Moon className="h-6 w-6 fill-current" />
         </div>
       </div>

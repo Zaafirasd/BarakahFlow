@@ -283,7 +283,7 @@ export default function StepComplete({ data }: StepCompleteProps) {
       )}
 
       <Button onClick={handleSave} fullWidth size="lg" loading={loading}>
-        Enter BarakaFlow
+        Enter BarakahFlow
       </Button>
     </div>
   );

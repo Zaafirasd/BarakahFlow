@@ -1,7 +1,7 @@
 import { calculateNextDueDate } from '@/lib/utils/getFinancialMonth';
 import type { Bill, BillFrequency } from '@/types';
 
-export const BILL_PAYMENT_PREFIX = 'barakaflow:bill-payment';
+export const BILL_PAYMENT_PREFIX = 'barakahflow:bill-payment';
 
 export interface BillPaymentMeta {
   billId: string;

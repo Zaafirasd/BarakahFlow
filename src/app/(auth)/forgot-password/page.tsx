@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
       >
         <Card className="border border-white/70 bg-white/88 p-8 shadow-[0_24px_70px_rgba(15,23,42,0.10)] dark:border-white/10 dark:bg-slate-900/76 dark:shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
           <div className="text-center mb-8">
-            <Image src="/logo.png" alt="BarakaFlow" width={200} height={80} className="mx-auto mb-3" priority />
+            <Image src="/logo.png" alt="BarakahFlow" width={200} height={80} className="mx-auto mb-3" priority />
             <p className="text-sm text-slate-500 dark:text-slate-400">Reset your password</p>
           </div>
 

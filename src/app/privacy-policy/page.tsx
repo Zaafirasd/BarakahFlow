@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export const metadata = { title: 'Privacy Policy — BarakaFlow' };
+export const metadata = { title: 'Privacy Policy — BarakahFlow' };
 
 export default function PrivacyPolicyPage() {
   return (
@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="mb-3 text-base font-black text-slate-900 dark:text-white">1. Who we are</h2>
             <p>
-              BarakaFlow is a personal Islamic finance tracker designed to help Muslims manage income, expenses, bills, and Zakat. Your financial data stays private and is never sold or shared with advertisers.
+              BarakahFlow is a personal Islamic finance tracker designed to help Muslims manage income, expenses, bills, and Zakat. Your financial data stays private and is never sold or shared with advertisers.
             </p>
           </section>
 

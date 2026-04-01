@@ -415,7 +415,7 @@ export default function ProfilePage() {
               {avatarLetter}
             </div>
             <div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{user?.name || 'BarakaFlow member'}</h2>
+              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{user?.name || 'BarakahFlow member'}</h2>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{user?.email}</p>
               <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Member since {memberSince}</p>
             </div>
@@ -582,7 +582,7 @@ export default function ProfilePage() {
           }
         >
           <div className="space-y-4">
-            <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Choose the date BarakaFlow should use for your annual Zakat reminder.</p>
+            <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Choose the date BarakahFlow should use for your annual Zakat reminder.</p>
             <input
               type="date"
               value={zakatDateDraft}

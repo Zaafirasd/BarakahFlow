@@ -12,13 +12,7 @@ import Button from '@/components/ui/Button';
 import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import type { Category, User } from '@/types';
-import * as LucideIcons from 'lucide-react';
-
-const IconComponent = ({ name, className }: { name: string; className?: string }) => {
-  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
-  const Icon = icons[name];
-  return Icon ? <Icon className={className} /> : <LucideIcons.CircleDot className={className} />;
-};
+import LucideIcon from '@/components/ui/LucideIcon';
 
 export default function AddTransactionPage() {
   const router = useRouter();
@@ -34,53 +28,44 @@ export default function AddTransactionPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let active = true;
     const fetchData = async () => {
       try {
         const supabase = createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) {
-          setError('Please sign in again to add a transaction.');
-          return;
-        }
+        if (!authUser || !active) return;
 
-        if (!user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('users')
+        // Fetch profile + categories in parallel
+        const [profileRes, catsRes] = await Promise.all([
+          !user
+            ? supabase.from('users').select('*').eq('id', authUser.id).single()
+            : Promise.resolve({ data: null }),
+          supabase
+            .from('categories')
             .select('*')
-            .eq('id', authUser.id)
-            .single();
+            .or(`user_id.eq.${authUser.id},user_id.is.null`)
+            .eq('type', type)
+            .order('sort_order'),
+        ]);
 
-          if (profileError) {
-            throw new Error(profileError.message);
+        if (profileRes.data && active) setUser(profileRes.data as User);
+
+        const cats = catsRes.data;
+        if (cats && active) {
+          setCategories(cats as Category[]);
+          if (selectedCategory && !cats.some(c => c.id === selectedCategory.id)) {
+            setSelectedCategory(null);
           }
-
-          if (profile) {
-            setUser(profile);
-          }
-        }
-
-        const { data: cats, error: categoriesError } = await supabase
-          .from('categories')
-          .select('*')
-          .or(`user_id.eq.${authUser.id},user_id.is.null`)
-          .eq('type', type)
-          .order('sort_order');
-
-        if (categoriesError) {
-          throw new Error(categoriesError.message);
-        }
-
-        setCategories(cats || []);
-        if (selectedCategory && !cats?.find((category) => category.id === selectedCategory.id)) {
-          setSelectedCategory(null);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unable to load transaction form.');
+        if (active) setError(err instanceof Error ? err.message : 'Unable to load transaction form.');
       }
     };
 
-    fetchData();
-  }, [selectedCategory, type]); // eslint-disable-line react-hooks/exhaustive-deps
+    void fetchData();
+    return () => { active = false; };
+  }, [type, user?.id]); // Depend on type and user.id 
+
 
   const handleSave = async () => {
     const validatedAmount = validateAmount(amount);
@@ -250,7 +235,7 @@ export default function AddTransactionPage() {
                       className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
                       style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
                     >
-                      <IconComponent name={cat.icon} className="w-5 h-5" />
+                      <LucideIcon name={cat.icon} className="w-5 h-5" />
                     </div>
                     <span className="truncate w-full px-1 text-[9px] font-extrabold uppercase tracking-tighter text-slate-700 dark:text-slate-300">
                       {cat.name}

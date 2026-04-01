@@ -3,7 +3,7 @@ import type { Account, Transaction } from '@/types';
 export const NISAB_GOLD_GRAMS = 87.48; // Standard 24K gold Nisab
 export const FALLBACK_GOLD_PRICE_AED = 286.45;
 export const ZAKAT_RATE = 0.025; // 2.5% — update annually if needed
-export const ZAKAT_LOCAL_STORAGE_PREFIX = 'barakaflow:zakat-calculation';
+export const ZAKAT_LOCAL_STORAGE_PREFIX = 'barakahflow:zakat-calculation';
 
 export interface ZakatInputs {
   cashOnHand: number;

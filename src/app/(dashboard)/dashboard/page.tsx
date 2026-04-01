@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Moon, SunMedium } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -130,7 +130,7 @@ export default function DashboardPage() {
 
         const { start, end } = getFinancialMonthRange(profile.financial_month_start_day);
 
-        // Fetch all data in parallel — gold price included, no longer sequential
+        // Fetch all data in parallel — gold price included
         const [
           monthTransactionsResult,
           allTransactionsResult,
@@ -229,10 +229,22 @@ export default function DashboardPage() {
     void fetchData();
   }, []);
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = useMemo(() => new Date().toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
-  });
+  }), []);
+
+  const totalBalance = useMemo(
+    () => calculateAccountsTotal(accounts, allTransactions),
+    [accounts, allTransactions]
+  );
+
+  const goldValue = useMemo(
+    () => (user?.gold_grams || 0) * goldPrice,
+    [user?.gold_grams, goldPrice]
+  );
+
+  const handleOpenGoldModal = useCallback(() => setIsGoldModalOpen(true), []);
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -240,7 +252,7 @@ export default function DashboardPage() {
 
   return (
     <PageTransition>
-      <div className="relative min-h-screen overflow-hidden px-5 pb-28 pt-4">
+      <div className="relative min-h-screen overflow-hidden px-5 pb-32 pt-4">
         <div className="absolute inset-x-0 top-0 h-80 rounded-b-[3.5rem] bg-gradient-to-br from-rose-200/90 via-violet-200/80 to-sky-200/70 dark:from-rose-400/20 dark:via-indigo-500/15 dark:to-sky-400/10" />
 
         <div className="relative">
@@ -286,7 +298,7 @@ export default function DashboardPage() {
             <StaggerItem>
               <BalanceCard
                 transactions={transactions}
-                totalBalance={calculateAccountsTotal(accounts, allTransactions)}
+                totalBalance={totalBalance}
                 currency={user?.primary_currency || 'AED'}
               />
             </StaggerItem>
@@ -301,7 +313,7 @@ export default function DashboardPage() {
             </StaggerItem>
 
             <StaggerItem>
-              <button type="button" onClick={() => router.push('/bills')} className="block w-full text-left">
+              <button type="button" onClick={() => router.push('/bills')} className="group block w-full text-left">
                 <BillsCard bills={bills} currency={user?.primary_currency || 'AED'} />
               </button>
             </StaggerItem>
@@ -312,19 +324,19 @@ export default function DashboardPage() {
                 currency={user?.primary_currency || 'AED'}
                 pricePerGram={goldPrice}
                 isCachedPrice={isGoldCached}
-                onManage={() => setIsGoldModalOpen(true)}
+                onManage={handleOpenGoldModal}
               />
             </StaggerItem>
 
             {user?.zakat_enabled && (
               <StaggerItem>
-                <button type="button" onClick={() => router.push('/zakat')} className="block w-full text-left">
+                <button type="button" onClick={() => router.push('/zakat')} className="group block w-full text-left">
                   <ZakatCard
                     zakatDate={user.zakat_anniversary_date}
-                    balance={calculateAccountsTotal(accounts, allTransactions)}
+                    balance={totalBalance}
                     currency={user.primary_currency || 'AED'}
                     estimate={zakatEstimate}
-                    goldValue={(user.gold_grams || 0) * goldPrice}
+                    goldValue={goldValue}
                     goldPrice={goldPrice}
                   />
                 </button>

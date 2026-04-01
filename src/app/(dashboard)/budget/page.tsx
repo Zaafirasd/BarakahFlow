@@ -143,7 +143,22 @@ export default function BudgetPage() {
       return;
     }
 
-    const profileResult = await supabase.from('users').select('*').eq('id', authUser.id).single();
+    // Fetch profile and categories in parallel (don't need profile for these queries)
+    const [profileResult, budgetResult, categoryResult] = await Promise.all([
+      supabase.from('users').select('*').eq('id', authUser.id).single(),
+      supabase
+        .from('budgets')
+        .select('*, category:categories(id, name, icon, color, sort_order, is_islamic, type)')
+        .eq('user_id', authUser.id)
+        .eq('is_active', true),
+      supabase
+        .from('categories')
+        .select('*')
+        .or(`user_id.eq.${authUser.id},user_id.is.null`)
+        .eq('type', 'expense')
+        .order('sort_order', { ascending: true }),
+    ]);
+
     if (!profileResult.data) {
       setLoading(false);
       return;
@@ -152,30 +167,18 @@ export default function BudgetPage() {
     const profile = profileResult.data as User;
     setUser(profile);
 
+    // Now fetch transactions with the financial month range (needs profile)
     const { start, end } = getFinancialMonthRange(profile.financial_month_start_day, referenceDate);
 
-    const [budgetResult, transactionResult, categoryResult] = await Promise.all([
-      supabase
-        .from('budgets')
-        .select('*, category:categories(*)')
-        .eq('user_id', authUser.id)
-        .eq('is_active', true),
-      supabase
-        .from('transactions')
-        .select('*, category:categories(*)')
-        .eq('user_id', authUser.id)
-        .eq('type', 'expense')
-        .gte('date', start.toISOString().split('T')[0])
-        .lte('date', end.toISOString().split('T')[0])
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('categories')
-        .select('*')
-        .or(`user_id.eq.${authUser.id},user_id.is.null`)
-        .eq('type', 'expense')
-        .order('sort_order', { ascending: true }),
-    ]);
+    const transactionResult = await supabase
+      .from('transactions')
+      .select('*, category:categories(*)')
+      .eq('user_id', authUser.id)
+      .eq('type', 'expense')
+      .gte('date', start.toISOString().split('T')[0])
+      .lte('date', end.toISOString().split('T')[0])
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
 
     setBudgets((budgetResult.data || []).filter((budget): budget is BudgetWithCategory => Boolean(budget.category)));
     setTransactions((transactionResult.data || []).filter((transaction): transaction is TransactionWithCategory => Boolean(transaction.category)));
@@ -465,7 +468,7 @@ export default function BudgetPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.03 }}
                     className="overflow-hidden"
                   >
                     <button
@@ -512,7 +515,7 @@ export default function BudgetPage() {
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${progressWidth}%` }}
-                              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                               className="h-full rounded-full"
                               style={{ backgroundColor: barColor }}
                             />
@@ -527,7 +530,7 @@ export default function BudgetPage() {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.28, ease: 'circOut' }}
+                          transition={{ duration: 0.2, ease: 'circOut' }}
                           className="overflow-hidden border-t border-slate-100/60 bg-slate-50/70 dark:border-white/5 dark:bg-black/15"
                         >
                           <div className="space-y-3 p-5">

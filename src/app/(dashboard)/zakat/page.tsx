@@ -94,7 +94,7 @@ function ExpandableCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
+            transition={{ duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
           >
             <div className="mt-4 space-y-4 border-t border-slate-100 pt-5 dark:border-white/5 p-1">{children}</div>
           </motion.div>
@@ -153,7 +153,7 @@ export default function ZakatPage() {
       return;
     }
 
-    const [profileResult, accountsResult, categoriesResult, transactionsResult] = await Promise.all([
+    const [profileResult, accountsResult, categoriesResult, transactionsResult, goldRes] = await Promise.all([
       supabase.from('users').select('*').eq('id', authUser.id).single(),
       supabase.from('accounts').select('*').eq('user_id', authUser.id).eq('is_active', true),
       supabase
@@ -167,20 +167,20 @@ export default function ZakatPage() {
         .select('*, category:categories(*)')
         .eq('user_id', authUser.id)
         .order('date', { ascending: false })
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(500),
+      fetch('/api/gold-price').catch(() => null),
     ]);
 
     if (profileResult.data) {
       const profile = profileResult.data as User;
       setUser(profile);
 
-      // Source of truth: Supabase zakat_inputs
       if (isStoredZakatCalculation(profile.zakat_inputs)) {
         const stored = profile.zakat_inputs;
         setStoredCalculation(stored);
         setInputs(stored.inputs);
       } else {
-        // Fallback: localStorage
         if (typeof window !== 'undefined') {
           const storedLocal = window.localStorage.getItem(getZakatStorageKey(profile.id));
           if (storedLocal) {
@@ -203,17 +203,13 @@ export default function ZakatPage() {
     setTransactions((transactionsResult.data || []) as TransactionWithCategory[]);
     setAccountId(accountsResult.data?.[0]?.id || null);
 
-    // Fetch Live Gold Price
-    try {
-      const goldRes = await fetch('/api/gold-price');
-      if (goldRes.ok) {
-        const goldData = await goldRes.json();
+    if (goldRes?.ok) {
+      try {
+        const goldData = await goldRes.json() as { price_per_gram?: number };
         if (goldData.price_per_gram) {
           setGoldPrice(goldData.price_per_gram);
         }
-      }
-    } catch {
-      // Fallback already set to 286.45
+      } catch { /* fallback already set */ }
     }
 
     setLoading(false);

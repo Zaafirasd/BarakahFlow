@@ -18,7 +18,7 @@ export default function StepWelcome({ onNext }: StepWelcomeProps) {
       >
         <Image
           src="/logo.png"
-          alt="BarakaFlow"
+          alt="BarakahFlow"
           width={240}
           height={96}
           className="mx-auto"

@@ -550,7 +550,7 @@ export default function BillsPage() {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="h-full rounded-full bg-emerald-500"
               />
             </div>

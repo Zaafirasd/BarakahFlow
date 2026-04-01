@@ -97,7 +97,7 @@ function SignInForm() {
           <div className="text-center mb-8">
             <Image
               src="/logo.png"
-              alt="BarakaFlow"
+              alt="BarakahFlow"
               width={200}
               height={80}
               className="mx-auto mb-3"

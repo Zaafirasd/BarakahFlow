@@ -2,7 +2,6 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateLabel, getFinancialMonthLabel, getFinancialMonthRange } from '@/lib/utils/getFinancialMonth';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
@@ -12,13 +11,7 @@ import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import PageTransition from '@/components/ui/PageTransition';
 import type { Category, Transaction, User } from '@/types';
-import * as LucideIcons from 'lucide-react';
-
-const IconComponent = ({ name, className }: { name: string; className?: string }) => {
-  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
-  const Icon = icons[name];
-  return Icon ? <Icon className={className} /> : <LucideIcons.CircleDot className={className} />;
-};
+import LucideIcon from '@/components/ui/LucideIcon';
 
 interface EditForm {
   amount: string;
@@ -238,12 +231,9 @@ function TransactionsPageContent() {
                 {formatDateLabel(date)}
               </h3>
               <div className="space-y-2">
-                {txns.map((tx, i) => (
-                  <motion.button
+                {txns.map((tx) => (
+                  <button
                     key={tx.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
                     onClick={() => openDetail(tx)}
                     className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-left transition-all active:scale-[0.98] hover:bg-slate-50 dark:border-white/5 dark:bg-slate-800/50 dark:hover:bg-white/10"
                   >
@@ -251,7 +241,7 @@ function TransactionsPageContent() {
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem]"
                       style={{ backgroundColor: `${tx.category?.color || '#6366F1'}20`, color: tx.category?.color || '#6366F1' }}
                     >
-                      <IconComponent name={tx.category?.icon || 'CircleDot'} className="w-5 h-5" />
+                      <LucideIcon name={tx.category?.icon || 'CircleDot'} className="w-5 h-5" />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-white">
@@ -264,7 +254,7 @@ function TransactionsPageContent() {
                     <span className={`shrink-0 text-[15px] font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-slate-900 dark:text-white'}`}>
                       {tx.type === 'income' ? '+' : '-'}{formatCurrency(Math.abs(tx.amount), currency)}
                     </span>
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             </div>
@@ -388,7 +378,7 @@ function TransactionsPageContent() {
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
                       style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
                     >
-                      <IconComponent name={cat.icon} className="h-4 w-4" />
+                      <LucideIcon name={cat.icon} className="h-4 w-4" />
                     </div>
                     <span className={`text-[11px] font-bold truncate ${editForm.category_id === cat.id ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'}`}>
                       {cat.name}
