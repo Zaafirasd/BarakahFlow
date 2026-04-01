@@ -16,11 +16,14 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('bottom-sheet-open');
     } else {
       document.body.style.overflow = 'unset';
+      document.body.classList.remove('bottom-sheet-open');
     }
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.classList.remove('bottom-sheet-open');
     };
   }, [isOpen]);
 
