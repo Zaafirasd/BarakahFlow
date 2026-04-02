@@ -41,7 +41,7 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
           />
           {/* Sheet */}
           <motion.div
-            className="fixed bottom-0 left-0 right-0 z-[110] flex max-h-[92vh] flex-col overflow-hidden rounded-t-[2.5rem] border border-slate-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900"
+            className="fixed bottom-0 left-0 right-0 z-[110] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-[2.5rem] border border-slate-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -78,7 +78,7 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
               {footer && (
                 <div
                   className="shrink-0 border-t border-slate-100 bg-white px-6 pt-4 dark:border-white/5 dark:bg-slate-900"
-                  style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+                  style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.25rem)' }}
                 >
                   {footer}
                 </div>
