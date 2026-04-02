@@ -214,7 +214,7 @@ export default function OnboardingPage() {
         )}
 
         {/* Step content */}
-        <div className={`flex-1 flex flex-col px-6 ${currentStep === 1 ? 'pb-0' : 'pb-32'} overflow-hidden`}>
+        <div className={`flex-1 flex flex-col px-6 ${currentStep === 1 ? 'pb-0' : 'pb-32'} overflow-y-auto overflow-x-visible`}>
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentStep}
