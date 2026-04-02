@@ -132,7 +132,7 @@ export default function StepComplete({ data }: StepCompleteProps) {
   const symbol = formatCurrency(0, data.currency).replace(/[0.,\s]/g, '');
 
   return (
-    <div className="space-y-10 py-6 flex flex-col items-center">
+    <div className="space-y-10 flex flex-col items-center">
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -145,9 +145,9 @@ export default function StepComplete({ data }: StepCompleteProps) {
          </div>
       </motion.div>
 
-      <div className="text-center space-y-3">
+      <div className="text-center">
         <h2 className="text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">You&apos;re all set!</h2>
-        <p className="text-base font-medium text-slate-400 dark:text-slate-500 tracking-tight">BarakahFlow is ready for your journey.</p>
+        <p className="mt-2 text-base font-medium text-slate-500 dark:text-slate-400 tracking-tight">BarakahFlow is ready for your journey.</p>
       </div>
 
       <div className="w-full grid grid-cols-2 gap-4 pb-6">
@@ -191,17 +191,28 @@ export default function StepComplete({ data }: StepCompleteProps) {
         </div>
       </div>
 
-      {error && (
-        <div className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-bold text-rose-500 text-center">
-          {error}
+      <motion.div 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="fixed inset-x-0 bottom-0 p-6 z-50 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+      >
+        <div className="max-w-md mx-auto space-y-4">
+          {error && (
+            <div className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-bold text-rose-500 text-center">
+              {error}
+            </div>
+          )}
+          <Button 
+            onClick={handleSave} 
+            fullWidth 
+            size="lg" 
+            loading={loading} 
+            className="rounded-[2.2rem] py-6 text-xl font-black shadow-2xl shadow-emerald-500/25"
+          >
+            Get Started
+          </Button>
         </div>
-      )}
-
-      <div className="w-full pt-4">
-        <Button onClick={handleSave} fullWidth size="lg" loading={loading} className="rounded-[2.2rem] py-6 text-xl font-black shadow-2xl shadow-emerald-500/25">
-          Get Started
-        </Button>
-      </div>
+      </motion.div>
     </div>
   );
 }

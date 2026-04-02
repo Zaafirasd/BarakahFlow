@@ -78,20 +78,21 @@ export default function OnboardingPage() {
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col relative">
         {/* Top bar */}
         {currentStep > 1 && (
-          <div className="px-6 pt-6 pb-4 space-y-4">
-            <div className="flex h-8 items-center">
+          <div className="px-6 pt-6 pb-4 flex items-center gap-4">
+            <div className="flex h-8 items-center shrink-0">
               <button
                 onClick={back}
                 className="group flex items-center gap-2 text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white"
                 aria-label="Go back"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 transition-colors group-hover:bg-slate-200 dark:bg-white/5 dark:group-hover:bg-white/10">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 transition-colors group-hover:bg-white/10">
                   <ArrowLeft className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-black uppercase tracking-widest opacity-0 transition-opacity group-hover:opacity-100">Back</span>
               </button>
             </div>
-            <ProgressBar value={(currentStep / TOTAL_STEPS) * 100} size="sm" colorMode="emerald" />
+            <div className="flex-1">
+              <ProgressBar value={(currentStep / TOTAL_STEPS) * 100} size="sm" colorMode="emerald" />
+            </div>
           </div>
         )}
 

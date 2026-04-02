@@ -41,11 +41,11 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          className="space-y-6"
+          className="space-y-10"
         >
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white Montserrat">How do you earn?</h2>
-            <p className="mt-1 text-slate-500 dark:text-slate-400">Choose the profile that fits you best</p>
+            <h2 className="text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">How do you earn?</h2>
+            <p className="mt-2 text-base font-medium text-slate-500 dark:text-slate-400">Choose the profile that fits you best</p>
           </div>
 
           <div className="grid gap-4">
@@ -95,7 +95,7 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          className="space-y-8"
+          className="space-y-10"
         >
           <div className="flex items-center justify-between">
             <button

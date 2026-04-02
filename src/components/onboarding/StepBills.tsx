@@ -86,10 +86,10 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
   const isAdded = (name: string) => data.bills.some((bill) => bill.name === name);
 
   return (
-    <div className="space-y-6 max-w-full pb-32">
+    <div className="space-y-10 max-w-full pb-32">
       <div className="text-center">
-        <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">Fixed bills</h2>
-        <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">Regular expenses we should track</p>
+        <h2 className="text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">Fixed bills</h2>
+        <p className="mt-2 text-base font-medium text-slate-500 dark:text-slate-400">Regular expenses we should track</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 px-0.5">
