@@ -1,6 +1,7 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -13,7 +14,15 @@ interface BottomSheetProps {
 }
 
 export default function BottomSheet({ isOpen, onClose, children, title, footer }: BottomSheetProps) {
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   useEffect(() => {
+    if (!isClient) return;
+
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       document.body.classList.add('bottom-sheet-open');
@@ -25,9 +34,13 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
       document.body.style.overflow = '';
       document.body.classList.remove('bottom-sheet-open');
     };
-  }, [isOpen]);
+  }, [isClient, isOpen]);
 
-  return (
+  if (!isClient) {
+    return null;
+  }
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -46,6 +59,8 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            role="dialog"
+            aria-modal="true"
           >
             {/* Handle */}
             <div className="flex shrink-0 justify-center pb-2 pt-3">
@@ -87,6 +102,7 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
