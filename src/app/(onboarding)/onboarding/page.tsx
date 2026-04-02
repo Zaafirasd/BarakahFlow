@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { calculateNextDueDate } from '@/lib/utils/getFinancialMonth';
+import { sanitizeText, validateAmount } from '@/lib/utils/validation';
 import ProgressBar from '@/components/ui/ProgressBar';
 import StepWelcome from '@/components/onboarding/StepWelcome';
 import StepBasicInfo from '@/components/onboarding/StepBasicInfo';
@@ -14,8 +18,11 @@ import type { OnboardingData } from '@/types';
 const TOTAL_STEPS = 5;
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [data, setData] = useState<OnboardingData>({
     name: '',
     currency: 'AED',
@@ -34,7 +41,117 @@ export default function OnboardingPage() {
     setData(prev => ({ ...prev, ...updates }));
   };
 
+  const handleFinalSave = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setError('Not authenticated. Please sign in again.');
+        return;
+      }
+
+      const userId = user.id;
+      const sanitizedName = sanitizeText(data.name, 50);
+      const validatedIncome = validateAmount(data.income) ?? 0;
+      const validatedBalance = validateAmount(data.initialBalance) ?? 0;
+
+      // 1. Update user profile
+      const { error: userError } = await supabase.from('users').upsert({
+        id: userId,
+        email: user.email!,
+        name: sanitizedName,
+        primary_currency: data.currency,
+        financial_month_start_day: 1, 
+        monthly_income: validatedIncome,
+        income_type: data.incomeType,
+        zakat_enabled: false, 
+        onboarding_completed: false,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
+
+      if (userError) {
+        setError(`Failed to update profile: ${userError.message}`);
+        return;
+      }
+
+      // 2. Create/Update account 
+      const { data: existingAccounts } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (!existingAccounts?.length) {
+        const { error: accountError } = await supabase.from('accounts').insert({
+          user_id: userId,
+          name: 'Main Account',
+          type: 'cash',
+          currency: data.currency,
+          opening_balance: validatedBalance,
+        });
+
+        if (accountError) {
+          setError(`Failed to create account: ${accountError.message}`);
+          return;
+        }
+      } else {
+        await supabase.from('accounts')
+          .update({ opening_balance: validatedBalance })
+          .eq('user_id', userId)
+          .eq('id', existingAccounts[0].id);
+      }
+
+      // 3. Save Bills
+      if (data.bills.length > 0) {
+        const billRows = data.bills.map((bill) => ({
+          user_id: userId,
+          name: sanitizeText(bill.name, 50),
+          amount: validateAmount(bill.amount) ?? 0,
+          due_day: bill.dueDay,
+          frequency: bill.frequency,
+          next_due_date: calculateNextDueDate(bill.dueDay, bill.frequency).toISOString().split('T')[0],
+        }));
+
+        const { error: billsError } = await supabase.from('bills').insert(billRows);
+        if (billsError) {
+          setError(`Failed to save bills: ${billsError.message}`);
+          return;
+        }
+      }
+
+      // 4. Mark Completed
+      const { error: completeOnboardingError } = await supabase
+        .from('users')
+        .update({
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (completeOnboardingError) {
+        setError(`Failed to complete: ${completeOnboardingError.message}`);
+        return;
+      }
+
+      document.cookie = "bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax";
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const next = () => {
+    if (currentStep === 5) {
+      handleFinalSave();
+      return;
+    }
     setDirection(1);
     setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
   };
@@ -114,24 +231,36 @@ export default function OnboardingPage() {
           </AnimatePresence>
         </div>
 
-        {/* Persistent Action Footer for middle steps */}
-        {isMiddleStep && (
+        {/* Persistent Action Footer for middle and final steps */}
+        {[2, 3, 4, 5].includes(currentStep) && (
           <motion.div 
             initial={{ y: 100 }}
             animate={{ y: 0 }}
             className="fixed inset-x-0 bottom-0 p-6 z-50 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
           >
             <div className="max-w-md mx-auto space-y-4">
+              {error && (
+                <div className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-bold text-rose-500 text-center">
+                  {error}
+                </div>
+              )}
               <button 
                 onClick={next} 
-                disabled={!canContinue}
-                className={`w-full py-5 rounded-[2.2rem] text-xl font-black transition-all shadow-2xl ${
-                  canContinue 
+                disabled={!canContinue || loading}
+                className={`w-full py-5 rounded-[2.2rem] text-xl font-black transition-all shadow-2xl flex items-center justify-center gap-2 ${
+                  (canContinue && !loading)
                     ? 'bg-emerald-500 text-white shadow-emerald-500/30 hover:scale-[1.02] active:scale-95' 
                     : 'bg-slate-200 text-slate-400 dark:bg-white/5 cursor-not-allowed'
                 }`}
               >
-                Continue
+                {loading && (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                  />
+                )}
+                {currentStep === 5 ? 'Get Started' : 'Continue'}
               </button>
               {currentStep === 4 && (
                 <button type="button" onClick={next} className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white text-center">

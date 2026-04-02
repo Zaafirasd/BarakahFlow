@@ -1,16 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import { calculateNextDueDate, formatDayLabel } from '@/lib/utils/getFinancialMonth';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
-import { sanitizeText, validateAmount } from '@/lib/utils/validation';
-import { trackEvent, METRICS } from '@/lib/utils/analytics';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import type { OnboardingData } from '@/types';
 
 interface StepCompleteProps {
@@ -18,117 +10,6 @@ interface StepCompleteProps {
 }
 
 export default function StepComplete({ data }: StepCompleteProps) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSave = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError('Not authenticated. Please sign in again.');
-        return;
-      }
-
-      const userId = user.id;
-      const sanitizedName = sanitizeText(data.name, 50);
-      const validatedIncome = validateAmount(data.income) ?? 0;
-      const validatedBalance = validateAmount(data.initialBalance) ?? 0;
-
-      // 1. Update user profile
-      const { error: userError } = await supabase.from('users').upsert({
-        id: userId,
-        email: user.email!,
-        name: sanitizedName,
-        primary_currency: data.currency,
-        financial_month_start_day: 1, // Default to 1st sinceเรา removed the selector
-        monthly_income: validatedIncome,
-        income_type: data.incomeType,
-        zakat_enabled: false, // Disabled for now, add in menu later
-        onboarding_completed: false,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' });
-
-      if (userError) {
-        setError(`Failed to update profile: ${userError.message}`);
-        return;
-      }
-
-      // 2. Create/Update account with initial balance
-      const { data: existingAccounts } = await supabase
-        .from('accounts')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .limit(1);
-
-      if (!existingAccounts?.length) {
-        const { error: accountError } = await supabase.from('accounts').insert({
-          user_id: userId,
-          name: 'Main Account',
-          type: 'cash',
-          currency: data.currency,
-          opening_balance: validatedBalance,
-        });
-
-        if (accountError) {
-          setError(`Failed to create account: ${accountError.message}`);
-          return;
-        }
-      } else {
-        // Update existing account's opening balance
-        await supabase.from('accounts')
-          .update({ opening_balance: validatedBalance })
-          .eq('user_id', userId)
-          .eq('id', existingAccounts[0].id);
-      }
-
-      // 3. Save Bills
-      if (data.bills.length > 0) {
-        const billRows = data.bills.map((bill) => ({
-          user_id: userId,
-          name: sanitizeText(bill.name, 50),
-          amount: validateAmount(bill.amount) ?? 0,
-          due_day: bill.dueDay,
-          frequency: bill.frequency,
-          next_due_date: calculateNextDueDate(bill.dueDay, bill.frequency).toISOString().split('T')[0],
-        }));
-
-        const { error: billsError } = await supabase.from('bills').insert(billRows);
-        if (billsError) {
-          setError(`Failed to save bills: ${billsError.message}`);
-          return;
-        }
-      }
-
-      // 4. Mark Onboarding as Completed
-      const { error: completeOnboardingError } = await supabase
-        .from('users')
-        .update({
-          onboarding_completed: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
-
-      if (completeOnboardingError) {
-        setError(`Failed to complete: ${completeOnboardingError.message}`);
-        return;
-      }
-
-      document.cookie = "bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax";
-      router.push('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const symbol = formatCurrency(0, data.currency).replace(/[0.,\s]/g, '');
 
   return (
@@ -182,25 +63,6 @@ export default function StepComplete({ data }: StepCompleteProps) {
                </div>
              ))}
            </div>
-        </div>
-      </div>
-
-      <div className="fixed inset-x-0 bottom-0 p-6 z-50 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
-        <div className="max-w-md mx-auto space-y-4">
-          {error && (
-            <div className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-bold text-rose-500 text-center">
-              {error}
-            </div>
-          )}
-          <Button 
-            onClick={handleSave} 
-            fullWidth 
-            size="lg" 
-            loading={loading} 
-            className="rounded-[2.2rem] py-5 text-xl font-black shadow-2xl shadow-emerald-500/25 border-none"
-          >
-            Get Started
-          </Button>
         </div>
       </div>
     </div>
