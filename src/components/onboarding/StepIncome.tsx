@@ -107,14 +107,15 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
           </div>
 
           <div className="text-center">
-            <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat">{incomeTypeLabel[data.incomeType]}</h2>
-            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">How much do you generate in a typical month?</p>
+            <h2 className="text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">{incomeTypeLabel[data.incomeType]}</h2>
+            <p className="mt-2 text-base font-medium text-slate-500 dark:text-slate-400">How much do you generate in a typical month?</p>
           </div>
 
-          <div className="text-center py-8">
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl font-black text-slate-400 dark:text-slate-500">{symbol}</span>
+          <div className="text-center py-10">
+            <div className="flex items-center justify-center gap-4">
+              <span className="text-4xl font-black text-slate-300 dark:text-slate-600 Montserrat">{symbol}</span>
               <input
+                id="onboarding-income"
                 type="number"
                 inputMode="decimal"
                 placeholder="0"
@@ -132,18 +133,14 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
                 }}
                 min="0"
                 autoFocus
-                className="w-full bg-transparent text-center text-6xl font-black text-slate-900 focus:outline-none placeholder-slate-200 dark:text-white dark:placeholder-white/10"
-                id="onboarding-income"
+                className="w-full bg-transparent text-center text-7xl font-black text-slate-900 focus:outline-none placeholder-slate-200 dark:text-white dark:placeholder-white/10 Montserrat tracking-tighter"
               />
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-6 pt-4">
-            <Button onClick={onNext} disabled={data.income <= 0} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
-              Continue
-            </Button>
-            <p className="px-8 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-relaxed">
-              This helps us calculate your budgets. You can change this anytime.
+          <div className="flex flex-col items-center gap-6 pt-6">
+            <p className="px-10 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500 leading-relaxed italic">
+              This helps us calculate your budgets automatically. You can change this anytime.
             </p>
           </div>
         </motion.div>

@@ -96,3 +96,4 @@ Setting a custom Cache-Control header can break Next.js development behavior.
  POST /api/analytics/track 204 in 1126ms (next.js: 391ms, application-code: 734ms)
  GET /api/gold-price 200 in 329ms (next.js: 14ms, proxy.ts: 292ms, application-code: 24ms)
 ✓ Compiled in 7.8s
+✓ Finished writing to filesystem cache in 13.7s

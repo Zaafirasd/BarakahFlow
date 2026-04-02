@@ -110,6 +110,15 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  /* Onboarding Premium Typography */
+  .onboarding-input {
+    @apply font-black tracking-tight text-slate-900 dark:text-white Montserrat transition-all;
+  }
+
+  .onboarding-label {
+    @apply text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500 ml-4 mb-1.5 block leading-none;
+  }
 }
 
 /* Hide bottom nav smoothly when a BottomSheet is open */

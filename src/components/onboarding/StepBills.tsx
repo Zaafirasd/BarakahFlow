@@ -185,27 +185,27 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
       </BottomSheet>
 
       {data.bills.length > 0 && (
-        <div className="space-y-3 px-1">
-          <div className="flex items-center justify-between px-1">
-             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Added Bills</h3>
-             <span className="text-[10px] font-black text-emerald-500">{data.bills.length} Tracking</span>
+        <div className="space-y-4 px-1">
+          <div className="flex items-center justify-between px-2">
+             <h3 className="onboarding-label Montserrat !ml-0">Added Bills</h3>
+             <span className="text-[10px] font-black text-emerald-500 Montserrat uppercase tracking-widest">{data.bills.length} Tracking</span>
           </div>
-          <div className="space-y-2 max-h-[160px] overflow-y-auto no-scrollbar pr-1">
+          <div className="space-y-3 max-h-[160px] overflow-y-auto no-scrollbar pr-1 pb-4">
             {data.bills.map((bill, index) => (
               <motion.div
                 key={`${bill.name}-${index}`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center justify-between rounded-[1.4rem] border border-white/70 bg-white/40 px-4 py-3 dark:border-white/5 dark:bg-white/5"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between rounded-[1.6rem] border border-white/70 bg-white/50 px-5 py-4 dark:border-white/5 dark:bg-white/5 shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-slate-900 dark:text-white leading-none">{bill.name}</p>
-                  <p className="mt-1 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                  <p className="truncate text-base font-black text-slate-900 dark:text-white leading-tight Montserrat">{bill.name}</p>
+                  <p className="mt-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 Montserrat uppercase tracking-tight">
                     {bill.amount} {data.currency} • Due Day {bill.dueDay}
                   </p>
                 </div>
-                <button type="button" onClick={() => removeBill(index)} className="ml-3 rounded-full bg-slate-500/10 p-2 text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500">
-                  <X className="h-3.5 w-3.5" />
+                <button type="button" onClick={() => removeBill(index)} className="ml-3 rounded-full bg-slate-500/10 p-2.5 text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500 active:scale-90">
+                  <X className="h-4 w-4" />
                 </button>
               </motion.div>
             ))}
@@ -213,28 +213,15 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
         </div>
       )}
 
-      <div className="pt-2">
+      <div className="pt-2 px-1">
         <button
           type="button"
           onClick={() => handleOpenSheet()}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-transparent bg-slate-100 px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white"
+          className="flex w-full items-center justify-center gap-3 rounded-[1.6rem] border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-5 text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-500 dark:hover:text-white"
         >
           <Plus className="h-4 w-4" /> Add custom bill
         </button>
       </div>
-
-      {!isSheetOpen && (
-        <div className="fixed inset-x-0 bottom-0 p-6 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
-          <div className="max-w-md mx-auto space-y-4">
-            <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
-              Continue
-            </Button>
-            <button type="button" onClick={onNext} className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white text-center">
-              Skip for now
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
