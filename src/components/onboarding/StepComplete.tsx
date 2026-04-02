@@ -18,10 +18,10 @@ export default function StepComplete({ data }: StepCompleteProps) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        className="relative"
+        className="relative flex items-center justify-center h-28 w-28"
       >
-         <div className="absolute inset-0 blur-3xl bg-emerald-500/20 rounded-full" />
-         <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white dark:bg-white/5 border-4 border-emerald-500 shadow-2xl shadow-emerald-500/20">
+         <div className="absolute inset-0 blur-3xl bg-emerald-500/30 rounded-full" />
+         <div className="relative flex h-full w-full items-center justify-center rounded-full bg-white dark:bg-white/5 border-4 border-emerald-500 shadow-xl shadow-emerald-500/20">
            <CheckCircle2 className="h-14 w-14 text-emerald-500" />
          </div>
       </motion.div>
