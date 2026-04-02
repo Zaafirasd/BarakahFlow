@@ -526,7 +526,8 @@ export default function BillsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen px-5 pb-32 pt-4">
+      <div className="relative min-h-screen px-5 pb-32 pt-[var(--pt-safe)]">
+        <div className="top-glow" />
         <PageHeader title="Bills" subtitle="Keep every recurring payment visible, editable, and on time." />
 
         <Card className="border border-white/70 bg-white/82 shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900/76">

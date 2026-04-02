@@ -30,8 +30,9 @@ export default function MorePage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen px-5 pb-32 pt-4">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">More</h1>
+      <div className="relative min-h-screen px-5 pb-32 pt-[var(--pt-safe)]">
+        <div className="top-glow" />
+        <h1 className="relative z-10 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">More</h1>
         <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">More pages, settings, and account actions.</p>
 
         <Card className="mt-7 border border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-900/76">

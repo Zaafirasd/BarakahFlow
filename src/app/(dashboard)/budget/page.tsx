@@ -362,7 +362,7 @@ export default function BudgetPage() {
   return (
     <PageTransition>
       <div
-        className="min-h-screen px-5 pb-32 pt-4"
+        className="relative min-h-screen px-5 pb-32 pt-[var(--pt-safe)]"
         onTouchStart={(event) => {
           touchStartX.current = event.changedTouches[0]?.clientX ?? null;
         }}
@@ -374,7 +374,9 @@ export default function BudgetPage() {
           touchStartX.current = null;
         }}
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="top-glow" />
+        
+        <div className="relative z-10 mb-6 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setMonthOffset((current) => current - 1)}

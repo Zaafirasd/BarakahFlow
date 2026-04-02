@@ -2,13 +2,26 @@
 
 @theme inline {
   --font-sans: var(--font-montserrat), system-ui, sans-serif;
-  --pt-safe: env(safe-area-inset-top);
-  --pb-safe: env(safe-area-inset-bottom);
+  --pt-safe: max(1rem, env(safe-area-inset-top));
+  --pb-safe: max(1rem, env(safe-area-inset-bottom));
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer components {
+  .safe-area-pt {
+    padding-top: var(--pt-safe);
+  }
+
+  .top-glow {
+    @apply fixed inset-x-0 top-0 z-0 pointer-events-none h-40;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%);
+  }
+
+  .dark .top-glow {
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.12) 0%, transparent 100%);
+  }
+
   .light-bg {
     background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 50%, #f5f3ff 100%);
     min-height: 100vh;

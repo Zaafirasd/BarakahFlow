@@ -371,7 +371,8 @@ export default function ZakatPage() {
   if (!user?.zakat_enabled) {
     return (
       <PageTransition>
-        <div className="min-h-screen px-5 pb-28 pt-4">
+        <div className="relative min-h-screen px-5 pb-28 pt-[var(--pt-safe)]">
+          <div className="top-glow" />
           <PageHeader title="Zakat" subtitle="Enable Zakat tracking in your profile to use this page." />
           <Card className="border border-white/70 bg-white/82 py-12 text-center dark:border-white/10 dark:bg-slate-900/76 rounded-[2.5rem] shadow-xl">
             <div className="flex justify-center mb-6">
@@ -394,7 +395,8 @@ export default function ZakatPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen px-5 pb-32 pt-4">
+      <div className="relative min-h-screen px-5 pb-32 pt-[var(--pt-safe)]">
+        <div className="top-glow" />
         <PageHeader title="Zakat" subtitle="Track your Zakat Al-Mal and manage Al-Fitr payments securely in the cloud." />
 
         <motion.div 

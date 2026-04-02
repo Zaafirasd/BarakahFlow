@@ -406,7 +406,8 @@ export default function ProfilePage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen px-5 pb-32 pt-4">
+      <div className="relative min-h-screen px-5 pb-32 pt-[var(--pt-safe)]">
+        <div className="top-glow" />
         <PageHeader title="Profile" subtitle="Account settings, financial preferences, and Islamic finance options." />
 
         <Card className="border border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-900/76">

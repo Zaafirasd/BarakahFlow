@@ -207,9 +207,10 @@ function TransactionsPageContent() {
 
   return (
     <PageTransition>
-    <div className="p-5 pb-32">
-      <h1 className="mb-1 text-2xl font-extrabold text-slate-900 dark:text-white">Transactions</h1>
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{monthLabel}</p>
+    <div className="relative px-5 pb-32 pt-[var(--pt-safe)]">
+      <div className="top-glow" />
+      <h1 className="relative z-10 mb-1 text-2xl font-extrabold text-slate-900 dark:text-white">Transactions</h1>
+      <p className="relative z-10 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{monthLabel}</p>
       {categoryFilter && categoryName ? (
         <p className="mt-2 mb-5 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
           Filtered by {categoryName}
