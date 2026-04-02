@@ -10,7 +10,7 @@ interface StepWelcomeProps {
 
 export default function StepWelcome({ onNext }: StepWelcomeProps) {
   return (
-    <div className="text-center space-y-10 pt-4 pb-12 overflow-y-auto">
+    <div className="text-center space-y-12 py-8 min-h-[85dvh] flex flex-col justify-center">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

@@ -150,52 +150,42 @@ export default function StepComplete({ data }: StepCompleteProps) {
         <p className="mt-2 text-base font-medium text-slate-500 dark:text-slate-400 tracking-tight">BarakahFlow is ready for your journey.</p>
       </div>
 
-      <div className="w-full grid grid-cols-2 gap-4 pb-6">
-        {/* Name Chip */}
-        <div className="flex flex-col items-center justify-center rounded-[2.2rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-6 transition-all shadow-sm">
-           <span className="onboarding-label Montserrat !ml-0 mb-2">User</span>
-           <span className="text-base font-black text-slate-900 dark:text-white truncate max-w-full Montserrat">{data.name}</span>
+      <div className="w-full space-y-3 pb-8">
+        {/* User Info Row */}
+        <div className="flex items-center justify-between rounded-[2rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-5 px-7 shadow-sm">
+           <span className="onboarding-label Montserrat !ml-0 uppercase tracking-widest text-[9px]">Account</span>
+           <span className="text-base font-black text-slate-900 dark:text-white Montserrat">{data.name} ({data.currency})</span>
         </div>
 
-        {/* Currency Chip */}
-        <div className="flex flex-col items-center justify-center rounded-[2.2rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-6 transition-all shadow-sm">
-           <span className="onboarding-label Montserrat !ml-0 mb-2">Currency</span>
-           <span className="text-base font-black text-slate-900 dark:text-white uppercase Montserrat">{data.currency}</span>
+        {/* Financial Summary card */}
+        <div className="rounded-[2.2rem] bg-emerald-500/5 border border-emerald-500/10 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+             <span className="onboarding-label Montserrat !ml-0 !text-emerald-600/70 uppercase tracking-widest text-[9px]">Calculated Balance</span>
+             <span className="text-lg font-black text-emerald-600 Montserrat">{symbol} {data.initialBalance.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+             <span className="onboarding-label Montserrat !ml-0 !text-slate-400 uppercase tracking-widest text-[9px]">Monthly Income</span>
+             <span className="text-sm font-black text-slate-900 dark:text-white Montserrat">{symbol} {data.income.toLocaleString()}</span>
+          </div>
         </div>
 
-        {/* Balance Chip */}
-        <div className="flex flex-col items-center justify-center rounded-[2.2rem] bg-emerald-500/5 border border-emerald-500/10 p-6 transition-all shadow-sm">
-           <span className="onboarding-label Montserrat !ml-0 mb-2 !text-emerald-600/70">Balance</span>
-           <span className="text-lg font-black text-emerald-600 Montserrat">{symbol} {data.initialBalance.toLocaleString()}</span>
-        </div>
-
-        {/* Income Chip */}
-        <div className="flex flex-col items-center justify-center rounded-[2.2rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-6 transition-all shadow-sm">
-           <span className="onboarding-label Montserrat !ml-0 mb-2">Monthly Income</span>
-           <span className="text-base font-black text-slate-900 dark:text-white Montserrat">{symbol} {data.income.toLocaleString()}</span>
-        </div>
-
-        {/* Bills Chip */}
-        <div className="col-span-2 flex items-center justify-between rounded-[2.2rem] bg-indigo-500/5 border border-indigo-500/10 p-6 px-10 transition-all shadow-sm">
+        {/* Bills Info */}
+        <div className="flex items-center justify-between rounded-[2.2rem] bg-indigo-500/5 border border-indigo-500/10 p-5 px-7 shadow-sm">
            <div className="flex flex-col">
-             <span className="onboarding-label Montserrat !ml-0 mb-1 !text-indigo-500/70">Active Bills</span>
-             <span className="text-base font-black text-indigo-600 dark:text-white uppercase Montserrat">{data.bills.length} Tracking</span>
+             <span className="onboarding-label Montserrat !ml-0 !text-indigo-500/70 uppercase tracking-widest text-[9px]">Tracking Items</span>
+             <span className="text-sm font-black text-indigo-600 dark:text-white Montserrat">{data.bills.length} Active Bills</span>
            </div>
-           <div className="flex -space-x-3">
-             {data.bills.slice(0, 4).map((_, i) => (
-               <div key={i} className="h-10 w-10 rounded-full border-4 border-white dark:border-[#020617] bg-indigo-500 flex items-center justify-center shadow-lg">
-                 <span className="text-xs text-white font-black Montserrat">B</span>
+           <div className="flex -space-x-2">
+             {data.bills.slice(0, 3).map((_, i) => (
+               <div key={i} className="h-8 w-8 rounded-full border-2 border-white dark:border-[#020617] bg-indigo-500 flex items-center justify-center shadow-lg">
+                 <span className="text-[8px] text-white font-black Montserrat">B</span>
                </div>
              ))}
            </div>
         </div>
       </div>
 
-      <motion.div 
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        className="fixed inset-x-0 bottom-0 p-6 z-50 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
-      >
+      <div className="fixed inset-x-0 bottom-0 p-6 z-50 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
         <div className="max-w-md mx-auto space-y-4">
           {error && (
             <div className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-bold text-rose-500 text-center">
@@ -207,12 +197,12 @@ export default function StepComplete({ data }: StepCompleteProps) {
             fullWidth 
             size="lg" 
             loading={loading} 
-            className="rounded-[2.2rem] py-6 text-xl font-black shadow-2xl shadow-emerald-500/25"
+            className="rounded-[2.2rem] py-5 text-xl font-black shadow-2xl shadow-emerald-500/25 border-none"
           >
             Get Started
           </Button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
