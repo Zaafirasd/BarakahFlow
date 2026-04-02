@@ -18,13 +18,20 @@ export default function StepComplete({ data }: StepCompleteProps) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        className="relative flex items-center justify-center"
+        className="relative flex items-center justify-center p-8 overflow-visible"
       >
-         {/* Large, unclipped glow */}
-         <div className="absolute h-40 w-40 blur-[3rem] bg-emerald-500/20 rounded-full" />
+         {/* Premium Radial Glow (GPU Accelerated) */}
+         <div 
+           className="absolute h-64 w-64 pointer-events-none opacity-50"
+           style={{
+             background: 'radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%)',
+             transform: 'translate3d(0,0,0)',
+             backfaceVisibility: 'hidden'
+           }}
+         />
          
          {/* Icon Container */}
-         <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900 border-4 border-emerald-500 shadow-xl shadow-emerald-500/10">
+         <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-[#f8fafc] dark:bg-[#020617] border-[4px] border-emerald-500 shadow-lg shadow-emerald-500/10">
            <CheckCircle2 className="h-14 w-14 text-emerald-500" />
          </div>
       </motion.div>
