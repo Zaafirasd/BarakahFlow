@@ -2,6 +2,8 @@
 
 @theme inline {
   --font-sans: var(--font-montserrat), system-ui, sans-serif;
+  --pt-safe: env(safe-area-inset-top);
+  --pb-safe: env(safe-area-inset-bottom);
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

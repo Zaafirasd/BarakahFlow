@@ -6,11 +6,10 @@ interface BillTemplate {
   frequency: BillFrequency;
 }
 
-export const UAE_BILL_TEMPLATES: BillTemplate[] = [
-  { name: 'DEWA', icon: 'Zap', frequency: 'monthly' },
-  { name: 'Etisalat', icon: 'Wifi', frequency: 'monthly' },
-  { name: 'du', icon: 'Wifi', frequency: 'monthly' },
-  { name: 'Rent (Ejari)', icon: 'Home', frequency: 'quarterly' },
-  { name: 'Car Insurance', icon: 'Shield', frequency: 'annual' },
-  { name: 'Health Insurance', icon: 'Heart', frequency: 'annual' },
+export const GLOBAL_BILL_TEMPLATES: BillTemplate[] = [
+  { name: 'Electricity & Water', icon: 'Zap', frequency: 'monthly' },
+  { name: 'Internet & Mobile', icon: 'Wifi', frequency: 'monthly' },
+  { name: 'Rent / Mortgage', icon: 'Home', frequency: 'monthly' },
+  { name: 'Insurance', icon: 'Shield', frequency: 'monthly' },
+  { name: 'Subscriptions', icon: 'Heart', frequency: 'monthly' },
 ];

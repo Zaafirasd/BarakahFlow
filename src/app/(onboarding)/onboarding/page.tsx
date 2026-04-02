@@ -8,12 +8,10 @@ import StepWelcome from '@/components/onboarding/StepWelcome';
 import StepBasicInfo from '@/components/onboarding/StepBasicInfo';
 import StepIncome from '@/components/onboarding/StepIncome';
 import StepBills from '@/components/onboarding/StepBills';
-import StepBudget from '@/components/onboarding/StepBudget';
-import StepZakat from '@/components/onboarding/StepZakat';
 import StepComplete from '@/components/onboarding/StepComplete';
 import type { OnboardingData } from '@/types';
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 5;
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -24,9 +22,10 @@ export default function OnboardingPage() {
     incomeType: 'salary',
     payDay: 1,
     income: 0,
+    initialBalance: 0,
     goldGrams: 0,
     bills: [],
-    budgetChoice: 'auto',
+    budgetChoice: 'manual',
     zakatEnabled: false,
     zakatDate: null,
   });
@@ -66,15 +65,13 @@ export default function OnboardingPage() {
       case 2: return <StepBasicInfo data={data} updateData={updateData} onNext={next} />;
       case 3: return <StepIncome data={data} updateData={updateData} onNext={next} />;
       case 4: return <StepBills data={data} updateData={updateData} onNext={next} />;
-      case 5: return <StepBudget data={data} updateData={updateData} onNext={next} />;
-      case 6: return <StepZakat data={data} updateData={updateData} onNext={next} />;
-      case 7: return <StepComplete data={data} />;
+      case 5: return <StepComplete data={data} />;
       default: return null;
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_48%,_#f8fafc_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_32%),linear-gradient(180deg,_#020617_0%,_#0f172a_45%,_#020617_100%)] dark:text-white">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_48%,_#f8fafc_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_32%),linear-gradient(180deg,_#020617_0%,_#0f172a_45%,_#020617_100%)] dark:text-white pt-[var(--pt-safe)]">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
         {/* Top bar */}
         <div className="px-6 pt-6 pb-4 space-y-4">

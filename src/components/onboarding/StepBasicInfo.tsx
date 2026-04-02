@@ -13,8 +13,6 @@ interface StepBasicInfoProps {
 }
 
 export default function StepBasicInfo({ data, updateData, onNext }: StepBasicInfoProps) {
-  const payDays = Array.from({ length: 31 }, (_, i) => i + 1);
-
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -53,44 +51,23 @@ export default function StepBasicInfo({ data, updateData, onNext }: StepBasicInf
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">What day do you get paid?</label>
-            {data.payDay !== undefined && (
-              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Day {data.payDay === 0 ? 'Last' : data.payDay}</span>
-            )}
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">Current Balance (Starting Funds)</label>
+          <div className="relative">
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={data.initialBalance || ''}
+              onChange={(e) => updateData({ initialBalance: parseFloat(e.target.value) || 0 })}
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              id="onboarding-balance"
+            />
+            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase tracking-widest">{data.currency}</span>
           </div>
-          
-          <div className="grid grid-cols-7 gap-2 rounded-[2.2rem] bg-slate-100/40 p-3 dark:bg-white/5">
-            {payDays.map((day) => (
-              <button
-                key={day}
-                type="button"
-                onClick={() => updateData({ payDay: day })}
-                className={`flex aspect-square items-center justify-center rounded-2xl text-sm font-bold transition-all active:scale-90 ${
-                  data.payDay === day
-                    ? 'bg-emerald-500 text-white shadow-[0_8px_20px_-4px_rgba(16,185,129,0.4)]'
-                    : 'border border-transparent bg-white text-slate-600 hover:border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white'
-                }`}
-              >
-                {day}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => updateData({ payDay: 0 })}
-              className={`col-span-7 mt-2 flex flex-col items-center justify-center rounded-2xl py-4 transition-all active:scale-[0.97] ${
-                data.payDay === 0
-                  ? 'bg-emerald-500 text-white shadow-[0_8px_20px_-4px_rgba(16,185,129,0.4)]'
-                  : 'border border-transparent bg-white text-slate-600 hover:border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white'
-              }`}
-            >
-              <span className="text-sm font-black tracking-tight">{formatDayLabel(0)}</span>
-              <span className={`mt-0.5 text-[10px] font-bold uppercase tracking-wider opacity-60 ${data.payDay === 0 ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-                Automatically adjusts to month length
-              </span>
-            </button>
-          </div>
+          <p className="mt-1 px-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 leading-tight">
+            How much cash/bank balance do you have right now?
+          </p>
         </div>
       </div>
 

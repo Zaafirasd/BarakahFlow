@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, X, Zap, Wifi, Home, Shield, Heart, Info } from 'lucide-react';
-import { UAE_BILL_TEMPLATES } from '@/lib/constants/bill-templates';
+import { GLOBAL_BILL_TEMPLATES } from '@/lib/constants/bill-templates';
 import { formatBillFrequency, formatDayLabel } from '@/lib/utils/getFinancialMonth';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -48,7 +48,7 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
   const [editingBill, setEditingBill] = useState<Partial<OnboardingBill> | null>(null);
   const [showCustom, setShowCustom] = useState(false);
 
-  const handleOpenSheet = (template?: (typeof UAE_BILL_TEMPLATES)[0]) => {
+  const handleOpenSheet = (template?: (typeof GLOBAL_BILL_TEMPLATES)[0]) => {
     if (template) {
       setEditingBill({
         name: template.name,
@@ -86,40 +86,31 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
   const isAdded = (name: string) => data.bills.some((bill) => bill.name === name);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full pb-32">
       <div className="text-center">
-        <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat">Regular bills</h2>
-        <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">Add bills so we can track your remaining cash</p>
+        <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">Fixed bills</h2>
+        <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">Regular expenses we should track</p>
       </div>
 
-      <div className="rounded-[1.8rem] bg-indigo-500/5 p-4 border border-indigo-500/10">
-        <div className="flex items-start gap-3">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
-          <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 leading-relaxed">
-            Don&apos;t worry if you miss any—you can add, edit, or remove bills anytime from your Dashboard.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2.5">
-        {UAE_BILL_TEMPLATES.map((template) => (
+      <div className="grid grid-cols-2 gap-2.5 px-0.5">
+        {GLOBAL_BILL_TEMPLATES.map((template) => (
           <button
             key={template.name}
             type="button"
             onClick={() => !isAdded(template.name) && handleOpenSheet(template)}
             disabled={isAdded(template.name)}
-            className={`flex w-full items-center gap-3 rounded-[1.3rem] p-4 text-left transition-all ${
+            className={`flex w-full items-center gap-3 rounded-[1.3rem] p-3 text-left transition-all ${
               isAdded(template.name)
                 ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-inner'
                 : 'border border-slate-200 bg-white hover:border-emerald-500/30 hover:bg-slate-50/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10'
             }`}
           >
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isAdded(template.name) ? 'bg-emerald-500/10' : 'bg-slate-50 dark:bg-white/5'}`}>
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isAdded(template.name) ? 'bg-emerald-500/10' : 'bg-slate-50 dark:bg-white/5'}`}>
               {ICON_MAP[template.icon]}
             </div>
             <div className="min-w-0 pr-1">
-              <span className="block truncate text-sm font-black text-slate-900 dark:text-white leading-tight">{template.name}</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{formatBillFrequency(template.frequency)}</span>
+              <span className="block truncate text-xs font-black text-slate-900 dark:text-white leading-tight">{template.name}</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{template.frequency}</span>
             </div>
           </button>
         ))}
@@ -152,7 +143,7 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
               onChange={(e) => setEditingBill(prev => ({ ...prev, name: e.target.value }))}
             />
           )}
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">Amount</label>
@@ -168,7 +159,7 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase tracking-widest">{data.currency}</span>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 ml-4">Frequency</label>
               <FrequencySelect
@@ -194,27 +185,27 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
       </BottomSheet>
 
       {data.bills.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3 px-1">
           <div className="flex items-center justify-between px-1">
              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Added Bills</h3>
              <span className="text-[10px] font-black text-emerald-500">{data.bills.length} Tracking</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[160px] overflow-y-auto no-scrollbar pr-1">
             {data.bills.map((bill, index) => (
               <motion.div
                 key={`${bill.name}-${index}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center justify-between rounded-[1.4rem] border border-white/70 bg-white/50 px-5 py-4 dark:border-white/5 dark:bg-white/5"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center justify-between rounded-[1.4rem] border border-white/70 bg-white/40 px-4 py-3 dark:border-white/5 dark:bg-white/5"
               >
-                <div>
-                  <p className="text-sm font-black text-slate-900 dark:text-white">{bill.name}</p>
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                    {bill.amount} {data.currency} • {formatDayLabel(bill.dueDay)}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-slate-900 dark:text-white leading-none">{bill.name}</p>
+                  <p className="mt-1 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                    {bill.amount} {data.currency} • Due Day {bill.dueDay}
                   </p>
                 </div>
-                <button type="button" onClick={() => removeBill(index)} className="rounded-full bg-rose-500/10 p-2 text-rose-500 transition-colors hover:bg-rose-500/20">
-                  <X className="h-4 w-4" />
+                <button type="button" onClick={() => removeBill(index)} className="ml-3 rounded-full bg-slate-500/10 p-2 text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500">
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </motion.div>
             ))}
@@ -226,20 +217,22 @@ export default function StepBills({ data, updateData, onNext }: { data: Onboardi
         <button
           type="button"
           onClick={() => handleOpenSheet()}
-          className="flex items-center gap-2 rounded-2xl border border-transparent bg-slate-100 px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-transparent bg-slate-100 px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/10 dark:hover:text-white"
         >
           <Plus className="h-4 w-4" /> Add custom bill
         </button>
       </div>
 
       {!isSheetOpen && (
-        <div className="flex flex-col items-center gap-4 pt-4">
-          <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
-            Continue
-          </Button>
-          <button type="button" onClick={onNext} className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white">
-            I&apos;ll Add Them Later
-          </button>
+        <div className="fixed inset-x-0 bottom-0 p-6 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent dark:from-[#020617] dark:via-[#020617] pt-12 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+          <div className="max-w-md mx-auto space-y-4">
+            <Button onClick={onNext} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
+              Continue
+            </Button>
+            <button type="button" onClick={onNext} className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white text-center">
+              Skip for now
+            </button>
+          </div>
         </div>
       )}
     </div>

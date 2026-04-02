@@ -93,6 +93,7 @@ export interface OnboardingData {
   incomeType: 'salary' | 'freelance' | 'none';
   payDay: number;
   income: number;
+  initialBalance: number;
   goldGrams: number;
   bills: OnboardingBill[];
   budgetChoice: 'auto' | 'manual';

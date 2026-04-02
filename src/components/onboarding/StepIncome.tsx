@@ -107,13 +107,13 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
           </div>
 
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{incomeTypeLabel[data.incomeType]}</h2>
-            <p className="mt-1 text-slate-500 dark:text-slate-400">How much do you generate in a typical month?</p>
+            <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat">{incomeTypeLabel[data.incomeType]}</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">How much do you generate in a typical month?</p>
           </div>
 
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-2xl text-slate-500 dark:text-slate-400">{symbol}</span>
+          <div className="text-center py-8">
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-3xl font-black text-slate-400 dark:text-slate-500">{symbol}</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -132,40 +132,19 @@ export default function StepIncome({ data, updateData, onNext }: StepIncomeProps
                 }}
                 min="0"
                 autoFocus
-                className="w-full bg-transparent text-center text-5xl font-bold text-slate-900 focus:outline-none placeholder-slate-400 dark:text-white dark:placeholder-slate-600"
+                className="w-full bg-transparent text-center text-6xl font-black text-slate-900 focus:outline-none placeholder-slate-200 dark:text-white dark:placeholder-white/10"
                 id="onboarding-income"
               />
             </div>
           </div>
 
-          {data.incomeType === 'salary' && (
-            <div className="space-y-4 rounded-[2rem] border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-white/5">
-              <label className="block text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-                Monthly Pay Day
-              </label>
-              <div className="grid grid-cols-7 gap-1">
-                {[1, 5, 10, 15, 20, 25, 28].map((day) => (
-                  <button
-                    key={day}
-                    onClick={() => updateData({ payDay: day })}
-                    className={`flex h-10 items-center justify-center rounded-xl text-sm font-black transition-all ${
-                      data.payDay === day
-                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-white/5 dark:text-slate-500 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] italic text-slate-400 text-center">Select your typical recurring pay date</p>
-            </div>
-          )}
-
-          <div className="pt-4">
+          <div className="flex flex-col items-center gap-6 pt-4">
             <Button onClick={onNext} disabled={data.income <= 0} fullWidth size="lg" className="rounded-[1.8rem] py-5 text-lg font-black shadow-2xl shadow-emerald-500/25">
               Continue
             </Button>
+            <p className="px-8 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-relaxed">
+              This helps us calculate your budgets. You can change this anytime.
+            </p>
           </div>
         </motion.div>
       )}

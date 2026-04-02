@@ -38,19 +38,18 @@ export default function StepComplete({ data }: StepCompleteProps) {
       const userId = user.id;
       const sanitizedName = sanitizeText(data.name, 50);
       const validatedIncome = validateAmount(data.income) ?? 0;
-      const validatedGoldGrams = validateAmount(data.goldGrams) ?? 0;
+      const validatedBalance = validateAmount(data.initialBalance) ?? 0;
 
+      // 1. Update user profile
       const { error: userError } = await supabase.from('users').upsert({
         id: userId,
         email: user.email!,
         name: sanitizedName,
         primary_currency: data.currency,
-        financial_month_start_day: data.payDay,
+        financial_month_start_day: 1, // Default to 1st sinceเรา removed the selector
         monthly_income: validatedIncome,
         income_type: data.incomeType,
-        zakat_enabled: data.zakatEnabled,
-        zakat_anniversary_date: data.zakatDate || null,
-        gold_grams: validatedGoldGrams,
+        zakat_enabled: false, // Disabled for now, add in menu later
         onboarding_completed: false,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
@@ -60,17 +59,13 @@ export default function StepComplete({ data }: StepCompleteProps) {
         return;
       }
 
-      const { data: existingAccounts, error: accountLookupError } = await supabase
+      // 2. Create/Update account with initial balance
+      const { data: existingAccounts } = await supabase
         .from('accounts')
         .select('id')
         .eq('user_id', userId)
         .eq('is_active', true)
         .limit(1);
-
-      if (accountLookupError) {
-        setError(`Failed to check accounts: ${accountLookupError.message}`);
-        return;
-      }
 
       if (!existingAccounts?.length) {
         const { error: accountError } = await supabase.from('accounts').insert({
@@ -78,113 +73,40 @@ export default function StepComplete({ data }: StepCompleteProps) {
           name: 'Main Account',
           type: 'cash',
           currency: data.currency,
-          opening_balance: 0,
+          opening_balance: validatedBalance,
         });
 
         if (accountError) {
           setError(`Failed to create account: ${accountError.message}`);
           return;
         }
-      }
-
-      if (data.bills.length > 0) {
-        const { data: existingBills, error: existingBillsError } = await supabase
-          .from('bills')
-          .select('name, amount, due_day, frequency')
+      } else {
+        // Update existing account's opening balance
+        await supabase.from('accounts')
+          .update({ opening_balance: validatedBalance })
           .eq('user_id', userId)
-          .eq('is_active', true);
+          .eq('id', existingAccounts[0].id);
+      }
 
-        if (existingBillsError) {
-          setError(`Failed to check existing bills: ${existingBillsError.message}`);
+      // 3. Save Bills
+      if (data.bills.length > 0) {
+        const billRows = data.bills.map((bill) => ({
+          user_id: userId,
+          name: sanitizeText(bill.name, 50),
+          amount: validateAmount(bill.amount) ?? 0,
+          due_day: bill.dueDay,
+          frequency: bill.frequency,
+          next_due_date: calculateNextDueDate(bill.dueDay, bill.frequency).toISOString().split('T')[0],
+        }));
+
+        const { error: billsError } = await supabase.from('bills').insert(billRows);
+        if (billsError) {
+          setError(`Failed to save bills: ${billsError.message}`);
           return;
-        }
-
-        const existingBillKeys = new Set(
-          (existingBills ?? []).map((bill) => `${bill.name}|${Number(bill.amount)}|${bill.due_day}|${bill.frequency}`)
-        );
-
-        const billRows = data.bills
-          .map((bill) => {
-            const amount = validateAmount(bill.amount);
-
-            if (amount === null || amount <= 0) {
-              return null;
-            }
-
-            return {
-              user_id: userId,
-              name: sanitizeText(bill.name, 50),
-              amount,
-              due_day: bill.dueDay,
-              frequency: bill.frequency,
-              next_due_date: calculateNextDueDate(bill.dueDay, bill.frequency).toISOString().split('T')[0],
-            };
-          })
-          .filter((bill): bill is NonNullable<typeof bill> => {
-            if (!bill) {
-              return false;
-            }
-
-            const key = `${bill.name}|${Number(bill.amount)}|${bill.due_day}|${bill.frequency}`;
-            return !existingBillKeys.has(key);
-          });
-
-        if (billRows.length > 0) {
-          const { error: billsError } = await supabase.from('bills').insert(billRows);
-          if (billsError) {
-            setError(`Failed to save bills: ${billsError.message}`);
-            return;
-          }
         }
       }
 
-      if (data.budgetChoice === 'auto' && data.income > 0) {
-        const { data: categories, error: categoriesError } = await supabase
-          .from('categories')
-          .select('id, name')
-          .eq('is_system', true)
-          .eq('type', 'expense');
-
-        if (categoriesError) {
-          setError(`Failed to load categories: ${categoriesError.message}`);
-          return;
-        }
-
-        if (categories) {
-          const needsCategories = ['housing', 'utilities', 'groceries & food', 'transportation', 'healthcare'];
-          const wantsCategories = ['dining out', 'entertainment', 'clothing', 'subscriptions'];
-          const givingCategories = ['zakat al-mal', 'sadaqah'];
-
-          const needsBudget = (data.income * 0.5) / needsCategories.length;
-          const wantsBudget = (data.income * 0.25) / wantsCategories.length;
-          const givingBudget = (data.income * 0.1) / givingCategories.length;
-
-          const budgetRows: { user_id: string; category_id: string; amount: number }[] = [];
-
-          categories.forEach((cat) => {
-            const catNameLower = cat.name.toLowerCase();
-            if (needsCategories.includes(catNameLower)) {
-              budgetRows.push({ user_id: userId, category_id: cat.id, amount: needsBudget });
-            } else if (wantsCategories.includes(catNameLower)) {
-              budgetRows.push({ user_id: userId, category_id: cat.id, amount: wantsBudget });
-            } else if (givingCategories.includes(catNameLower)) {
-              budgetRows.push({ user_id: userId, category_id: cat.id, amount: givingBudget });
-            }
-          });
-
-          if (budgetRows.length > 0) {
-            const { error: budgetError } = await supabase
-              .from('budgets')
-              .upsert(budgetRows, { onConflict: 'user_id,category_id' });
-
-            if (budgetError) {
-              setError(`Failed to set up budget: ${budgetError.message}`);
-              return;
-            }
-          }
-        }
-      }
-
+      // 4. Mark Onboarding as Completed
       const { error: completeOnboardingError } = await supabase
         .from('users')
         .update({
@@ -194,97 +116,92 @@ export default function StepComplete({ data }: StepCompleteProps) {
         .eq('id', userId);
 
       if (completeOnboardingError) {
-        setError(`Failed to complete onboarding: ${completeOnboardingError.message}`);
+        setError(`Failed to complete: ${completeOnboardingError.message}`);
         return;
       }
 
-      // Track aggregate events anonymously
-      if (data.bills.length > 0) trackEvent(METRICS.BILL_ADDED);
-      
-      // OPTIMIZATION: Set onboarding completion cookie for FAST middleware checks (fixes the 5s delay)
       document.cookie = "bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax";
-      
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setLoading(false);
     }
   };
 
+  const symbol = formatCurrency(0, data.currency).replace(/[0.,\s]/g, '');
+
   return (
-    <div className="space-y-8 text-center">
+    <div className="space-y-10 py-4 flex flex-col items-center">
       <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+        className="relative"
       >
-        <CheckCircle2 className="mx-auto h-20 w-20 text-emerald-500" />
+         <div className="absolute inset-0 blur-3xl bg-emerald-500/20 rounded-full" />
+         <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white dark:bg-white/5 border-4 border-emerald-500 shadow-2xl shadow-emerald-500/20">
+           <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">You&apos;re all set!</h2>
-        <p className="mt-1 text-slate-500 dark:text-slate-400">Here&apos;s a summary of your setup</p>
-      </motion.div>
+      <div className="text-center space-y-2">
+        <h2 className="text-[2.2rem] font-extrabold tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">You&apos;re all set!</h2>
+        <p className="text-sm font-medium text-slate-400 dark:text-slate-500 tracking-tight">BarakahFlow is ready for your first entry.</p>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card>
-          <div className="space-y-3 text-left">
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Name</span>
-              <span className="font-medium text-slate-900 dark:text-white">{data.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Currency</span>
-              <span className="font-medium text-slate-900 dark:text-white">{data.currency}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Income</span>
-              <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(data.income, data.currency)} /month</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Pay Day</span>
-              <span className="font-medium text-slate-900 dark:text-white">{formatDayLabel(data.payDay)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Bills</span>
-              <span className="font-medium text-slate-900 dark:text-white">{data.bills.length} bills tracked</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Budget</span>
-              <span className="font-medium text-slate-900 dark:text-white">{data.budgetChoice === 'auto' ? 'Auto' : 'Manual later'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Zakat</span>
-              <span className="font-medium text-slate-900 dark:text-white">{data.zakatEnabled ? 'On' : 'Off'}</span>
-            </div>
-            {data.zakatEnabled && data.goldGrams > 0 && (
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Gold Holding</span>
-                <span className="font-medium text-slate-900 dark:text-white">{data.goldGrams}g</span>
-              </div>
-            )}
-          </div>
-        </Card>
-      </motion.div>
+      <div className="w-full grid grid-cols-2 gap-3 pb-4">
+        {/* Name Chip */}
+        <div className="flex flex-col items-center justify-center rounded-[1.8rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-5 transition-all hover:scale-[1.02]">
+           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">User</span>
+           <span className="text-sm font-black text-slate-900 dark:text-white truncate max-w-full">{data.name}</span>
+        </div>
+
+        {/* Currency Chip */}
+        <div className="flex flex-col items-center justify-center rounded-[1.8rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-5 transition-all hover:scale-[1.02]">
+           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Currency</span>
+           <span className="text-sm font-black text-slate-900 dark:text-white uppercase">{data.currency}</span>
+        </div>
+
+        {/* Balance Chip */}
+        <div className="flex flex-col items-center justify-center rounded-[1.8rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-5 transition-all hover:scale-[1.02]">
+           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Starting Balance</span>
+           <span className="text-sm font-black text-emerald-500">{symbol} {data.initialBalance.toLocaleString()}</span>
+        </div>
+
+        {/* Income Chip */}
+        <div className="flex flex-col items-center justify-center rounded-[1.8rem] bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-5 transition-all hover:scale-[1.02]">
+           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Income</span>
+           <span className="text-sm font-black text-slate-900 dark:text-white">{symbol} {data.income.toLocaleString()}</span>
+        </div>
+
+        {/* Bills Chip */}
+        <div className="col-span-2 flex items-center justify-between rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 p-5 px-8 transition-all hover:scale-[1.02]">
+           <div className="flex flex-col">
+             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500/70 mb-1">Active Bills</span>
+             <span className="text-sm font-black text-indigo-600 dark:text-white uppercase">{data.bills.length} Tracking</span>
+           </div>
+           <div className="flex -space-x-2">
+             {data.bills.slice(0, 3).map((_, i) => (
+               <div key={i} className="h-8 w-8 rounded-full border-2 border-white dark:border-[#020617] bg-indigo-500 flex items-center justify-center">
+                 <span className="text-[10px] text-white font-black">B</span>
+               </div>
+             ))}
+           </div>
+        </div>
+      </div>
 
       {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+        <div className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-bold text-rose-500 text-center">
           {error}
         </div>
       )}
 
-      <Button onClick={handleSave} fullWidth size="lg" loading={loading}>
-        Enter BarakahFlow
-      </Button>
+      <div className="w-full pt-4">
+        <Button onClick={handleSave} fullWidth size="lg" loading={loading} className="rounded-[2.2rem] py-6 text-xl font-black shadow-2xl shadow-emerald-500/25">
+          Get Started
+        </Button>
+      </div>
     </div>
   );
 }
