@@ -1,9 +1,12 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-montserrat), system-ui, sans-serif;
+:root {
   --pt-safe: max(1rem, env(safe-area-inset-top));
   --pb-safe: max(1rem, env(safe-area-inset-bottom));
+}
+
+@theme {
+  --font-sans: var(--font-montserrat), system-ui, sans-serif;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -126,7 +129,7 @@
 
   /* Onboarding Premium Typography */
   .onboarding-input {
-    @apply font-black tracking-tight text-slate-900 dark:text-white Montserrat transition-all;
+    @apply font-black tracking-tight text-slate-900 dark:text-white transition-all font-sans;
   }
 
   .onboarding-label {

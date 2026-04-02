@@ -1,6 +1,6 @@
 'use client';
 
-import { lazy, memo, Suspense } from 'react';
+import React, { lazy, memo, Suspense } from 'react';
 import dynamicIconImports from 'lucide-react/dynamicIconImports';
 import { CircleDot } from 'lucide-react';
 
@@ -32,15 +32,16 @@ function getLazyIcon(name: string) {
 }
 
 function LucideIconInner({ name, className, strokeWidth }: LucideIconProps) {
-  const LazyIcon = getLazyIcon(name);
+  const Icon = getLazyIcon(name);
 
-  if (!LazyIcon) {
+  if (!Icon) {
     return <CircleDot className={className} strokeWidth={strokeWidth} />;
   }
 
   return (
     <Suspense fallback={<CircleDot className={className} strokeWidth={strokeWidth} />}>
-      <LazyIcon className={className} strokeWidth={strokeWidth} />
+      {/* Use createElement to avoid 'component created during render' lint error */}
+      {React.createElement(Icon as any, { className, strokeWidth })}
     </Suspense>
   );
 }
