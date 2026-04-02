@@ -17,7 +17,10 @@ interface LucideIconProps extends LucideProps {
 const iconCache = new Map<string, React.LazyExoticComponent<React.ComponentType<LucideProps>>>();
 
 function getLazyIcon(name: string) {
-  const key = name.toLowerCase().replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  const key = name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([a-zA-Z])([0-9])/g, '$1-$2')
+    .toLowerCase();
   if (iconCache.has(key)) return iconCache.get(key)!;
 
   const importFn = dynamicIconImports[key as keyof typeof dynamicIconImports];

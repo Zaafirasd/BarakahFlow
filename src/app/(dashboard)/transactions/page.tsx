@@ -208,8 +208,8 @@ function TransactionsPageContent() {
   return (
     <PageTransition>
     <div className="p-5 pb-32">
-      <h1 className="mb-1 text-2xl font-semibold text-slate-900 dark:text-white">Transactions</h1>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{monthLabel}</p>
+      <h1 className="mb-1 text-2xl font-extrabold text-slate-900 dark:text-white">Transactions</h1>
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{monthLabel}</p>
       {categoryFilter && categoryName ? (
         <p className="mt-2 mb-5 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
           Filtered by {categoryName}
@@ -227,7 +227,7 @@ function TransactionsPageContent() {
         <div className="space-y-6">
           {Object.entries(grouped).map(([date, txns]) => (
             <div key={date}>
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em] mb-2">
                 {formatDateLabel(date)}
               </h3>
               <div className="space-y-2">
@@ -244,11 +244,11 @@ function TransactionsPageContent() {
                       <LucideIcon name={tx.category?.icon || 'CircleDot'} className="w-5 h-5" />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-white">
+                      <p className="truncate text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-white">
                         {tx.merchant_name || tx.category?.name || 'Transaction'}
                       </p>
                       {tx.merchant_name && tx.category && (
-                        <p className="text-slate-500 text-xs font-medium truncate">{tx.category.name}</p>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider opacity-60 truncate">{tx.category.name}</p>
                       )}
                     </div>
                     <span className={`shrink-0 text-[15px] font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-slate-900 dark:text-white'}`}>
