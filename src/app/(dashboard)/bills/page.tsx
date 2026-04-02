@@ -11,7 +11,7 @@ import LucideIcon from '@/components/ui/LucideIcon';
 import PageHeader from '@/components/ui/PageHeader';
 import PageTransition from '@/components/ui/PageTransition';
 import Toast from '@/components/ui/Toast';
-import { UAE_BILL_TEMPLATES } from '@/lib/constants/bill-templates';
+import { GLOBAL_BILL_TEMPLATES } from '@/lib/constants/bill-templates';
 import { createClient } from '@/lib/supabase/client';
 import {
   advanceBillNextDueDate,
@@ -600,7 +600,7 @@ export default function BillsPage() {
           <Card className="border border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-900/76">
             <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Quick Add</h2>
             <div className="mt-4 flex flex-wrap gap-2">
-              {UAE_BILL_TEMPLATES.map((template) => (
+              {GLOBAL_BILL_TEMPLATES.map((template) => (
                 <button
                   key={template.name}
                   type="button"
@@ -639,7 +639,7 @@ export default function BillsPage() {
           <div className="space-y-5">
             {!editingBill ? (
               <div className="flex flex-wrap gap-2">
-                {UAE_BILL_TEMPLATES.map((template) => (
+                {GLOBAL_BILL_TEMPLATES.map((template) => (
                   <button
                     key={template.name}
                     type="button"
