@@ -158,7 +158,9 @@ export default function AddTransactionPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen px-5 pb-12 pt-4">
+      <div className="relative min-h-screen px-5 pb-12 pt-[var(--pt-safe)]">
+        <div className="top-glow" />
+        <div className="relative z-10">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <button onClick={() => router.back()} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/82 text-slate-400 shadow-sm backdrop-blur-xl transition active:scale-95 dark:border-white/10 dark:bg-slate-900/76">
@@ -293,6 +295,7 @@ export default function AddTransactionPage() {
           </StaggerItem>
         </StaggerContainer>
       </div>
+    </div>
     </PageTransition>
   );
 }

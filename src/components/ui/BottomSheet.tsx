@@ -54,7 +54,7 @@ export default function BottomSheet({ isOpen, onClose, children, title, footer }
           />
           {/* Sheet */}
           <motion.div
-            className="fixed bottom-0 left-0 right-0 z-[110] flex max-h-[96dvh] flex-col overflow-hidden rounded-t-[2.5rem] border border-slate-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900 pt-[var(--pt-safe)]"
+            className="fixed bottom-0 left-0 right-0 z-[110] flex max-h-[90dvh] flex-col overflow-hidden rounded-t-[2.5rem] border border-slate-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900 pt-[var(--pt-safe)]"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
