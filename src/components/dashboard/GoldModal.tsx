@@ -64,14 +64,13 @@ export default function GoldModal({ isOpen, onClose, currentGrams, onUpdate, use
           />
           
           {/* Modal Container */}
-          <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
             <motion.div
-              layoutId="gold-modal"
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] bg-white p-8 shadow-2xl pointer-events-auto dark:bg-slate-900 overflow-hidden"
+              className="relative w-full max-w-sm rounded-[2rem] bg-white p-7 shadow-2xl pointer-events-auto dark:bg-slate-900 border border-slate-200 dark:border-white/10 overflow-hidden h-fit"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
