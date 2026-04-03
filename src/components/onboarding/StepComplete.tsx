@@ -15,31 +15,24 @@ export default function StepComplete({ data }: StepCompleteProps) {
   return (
     <div className="space-y-10 pt-10 flex flex-col items-center">
       <motion.div
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        className="relative flex items-center justify-center p-8 overflow-visible"
+        className="flex flex-col items-center text-center space-y-2 mb-4"
       >
-         {/* Premium Radial Glow (GPU Accelerated) */}
-         <div 
-           className="absolute h-64 w-64 pointer-events-none opacity-50"
-           style={{
-             background: 'radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%)',
-             transform: 'translate3d(0,0,0)',
-             backfaceVisibility: 'hidden'
-           }}
-         />
-         
-         {/* Icon Container */}
-         <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-[#f8fafc] dark:bg-[#020617] border-[4px] border-emerald-500 shadow-xl shadow-emerald-500/20">
-           <Sparkles className="h-12 w-12 text-emerald-500" strokeWidth={2.5} />
-         </div>
-      </motion.div>
-
-      <div className="text-center">
-        <h2 className="text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">You&apos;re all set!</h2>
+        <div className="flex items-center justify-center gap-4">
+           {/* Inline Icon Container */}
+           <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 shadow-lg shadow-emerald-500/20">
+             <Sparkles className="h-6 w-6" strokeWidth={2.5} />
+           </div>
+           
+           <h2 className="text-[2.2rem] sm:text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white Montserrat leading-tight">
+             All set!
+           </h2>
+        </div>
+        
         <p className="mt-2 text-base font-medium text-slate-500 dark:text-slate-400 tracking-tight">BarakahFlow is ready for your journey.</p>
-      </div>
+      </motion.div>
 
       <div className="w-full space-y-3 pb-8">
         {/* User Info Row */}
