@@ -140,13 +140,15 @@ export default function DashboardPage() {
             .from('transactions')
             .select('*, category:categories(*)')
             .eq('user_id', authUser.id)
+            .is('deleted_at', null)
             .gte('date', start.toISOString().split('T')[0])
             .lte('date', end.toISOString().split('T')[0])
             .order('date', { ascending: false }),
           supabase
             .from('transactions')
             .select('id, user_id, account_id, category_id, amount, merchant_name, description, date, type')
-            .eq('user_id', authUser.id),
+            .eq('user_id', authUser.id)
+            .is('deleted_at', null),
           supabase
             .from('accounts')
             .select('id, user_id, name, type, currency, opening_balance, is_active, created_at')

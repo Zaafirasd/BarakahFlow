@@ -3,6 +3,7 @@ export const METRICS = {
   SIGNIN: 'signins',
   ONBOARDING_COMPLETED: 'onboarding_completed',
   TRANSACTION_ADDED: 'transactions_added',
+  TRANSACTION_EDITED: 'transactions_edited',
   TRANSACTION_DELETED: 'transactions_deleted',
   BILL_ADDED: 'bills_added',
   BILL_DELETED: 'bills_deleted',

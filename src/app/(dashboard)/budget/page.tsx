@@ -174,6 +174,7 @@ export default function BudgetPage() {
       .select('*, category:categories(*)')
       .eq('user_id', authUser.id)
       .eq('type', 'expense')
+      .is('deleted_at', null)
       .gte('date', start.toISOString().split('T')[0])
       .lte('date', end.toISOString().split('T')[0])
       .order('date', { ascending: false })

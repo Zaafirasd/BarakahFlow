@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import PageTransition from '@/components/ui/PageTransition';
 import type { Category, Transaction, User } from '@/types';
 import LucideIcon from '@/components/ui/LucideIcon';
+import { TransactionService } from '@/lib/services/transactions';
 
 interface EditForm {
   amount: string;
@@ -64,6 +65,7 @@ function TransactionsPageContent() {
       .from('transactions')
       .select('*, category:categories(*)')
       .eq('user_id', authUser.id)
+      .is('deleted_at', null)
       .gte('date', start.toISOString().split('T')[0])
       .lte('date', end.toISOString().split('T')[0])
       .order('date', { ascending: false })
@@ -135,50 +137,47 @@ function TransactionsPageContent() {
   };
 
   const handleSave = async () => {
-    if (!selectedTx) return;
+    if (!user || !selectedTx) return;
     if (!validateEditForm()) return;
 
     setSaving(true);
     const parsedAmount = validateAmount(editForm.amount) || 0;
-    const sanitizedMerchant = sanitizeText(editForm.merchant_name, 100);
-    
-    const supabase = createClient();
-    const result = await supabase
-      .from('transactions')
-      .update({
-        amount: selectedTx.type === 'expense' ? -Math.abs(parsedAmount) : Math.abs(parsedAmount),
-        merchant_name: sanitizedMerchant || null,
+
+    try {
+      await TransactionService.update({
+        id: selectedTx.id,
+        userId: user.id,
+        categoryId: editForm.category_id,
+        amount: parsedAmount,
+        type: selectedTx.type,
+        merchantName: editForm.merchant_name,
         date: editForm.date,
-        category_id: editForm.category_id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', selectedTx.id);
-    
-    setSaving(false);
-    if (result.error) {
-      setFormErrors({ amount: result.error.message });
-      return;
+      });
+
+      setSaving(false);
+      setSelectedTx(null);
+      setEditMode(false);
+      void fetchTransactions();
+    } catch (err) {
+      setSaving(false);
+      setFormErrors({ amount: err instanceof Error ? err.message : 'Failed to save transaction.' });
     }
-    
-    setSelectedTx(null);
-    setEditMode(false);
-    void fetchTransactions();
   };
 
   const handleDelete = async () => {
     if (!selectedTx) return;
+    if (!user || !selectedTx) return;
     setDeleting(true);
-    const supabase = createClient();
-    const { error } = await supabase.from('transactions').delete().eq('id', selectedTx.id);
-    setDeleting(false);
-    if (error) {
-      setFormErrors({ amount: error.message });
-      return;
+    try {
+      await TransactionService.softDelete(selectedTx.id, user.id);
+      setDeleting(false);
+      setSelectedTx(null);
+      setShowDelete(false);
+      void fetchTransactions();
+    } catch (err) {
+      setDeleting(false);
+      setFormErrors({ amount: err instanceof Error ? err.message : 'Failed to delete transaction.' });
     }
-    setSelectedTx(null);
-    setShowDelete(false);
-    trackEvent(METRICS.TRANSACTION_DELETED);
-    void fetchTransactions();
   };
 
   const grouped = useMemo(() => {

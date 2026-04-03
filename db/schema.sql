@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   date           DATE        NOT NULL DEFAULT CURRENT_DATE,
   type           TEXT        NOT NULL CHECK (type IN ('income', 'expense')),
   zakat_fitr_meta JSONB,
+  deleted_at     TIMESTAMPTZ DEFAULT NULL,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

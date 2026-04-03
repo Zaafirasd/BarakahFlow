@@ -190,6 +190,7 @@ export default function ZakatPage() {
         .from('transactions')
         .select('*, category:categories(*)')
         .eq('user_id', authUser.id)
+        .is('deleted_at', null)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(500),

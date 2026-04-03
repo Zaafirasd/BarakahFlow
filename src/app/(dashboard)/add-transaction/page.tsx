@@ -13,6 +13,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import type { Category, User } from '@/types';
 import LucideIcon from '@/components/ui/LucideIcon';
+import { TransactionService } from '@/lib/services/transactions';
 import { invalidateDashboardCache } from '@/lib/utils/dashboardCache';
 
 export default function AddTransactionPage() {
@@ -112,24 +113,16 @@ export default function AddTransactionPage() {
         throw new Error('No active account found.');
       }
 
-      const { error: insertError } = await supabase.from('transactions').insert({
-        user_id: authUser.id,
-        account_id: accountId,
-        category_id: selectedCategory.id,
-        amount: type === 'expense' ? -Math.abs(validatedAmount) : Math.abs(validatedAmount),
+      await TransactionService.create({
+        userId: authUser.id,
+        accountId,
+        categoryId: selectedCategory.id,
+        amount: validatedAmount || 0,
         type,
-        merchant_name: description ? sanitizeText(description, 80) : null,
+        merchantName: description,
         date,
       });
 
-      if (insertError) {
-        throw new Error(insertError.message);
-      }
-
-      // Invalidate the dashboard cache so it re-fetches the new data
-      invalidateDashboardCache(authUser.id);
-      
-      trackEvent(METRICS.TRANSACTION_ADDED);
       setSuccess(true);
       setTimeout(() => router.back(), 1200);
     } catch (err) {
