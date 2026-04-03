@@ -33,7 +33,7 @@ export default function StepWelcome({ onNext }: StepWelcomeProps) {
         className="space-y-6"
       >
         <div className="space-y-1">
-          <h1 className="text-[3.2rem] font-black leading-tight tracking-tight text-slate-900 dark:text-white Montserrat">
+          <h1 className="text-[2.4rem] min-[380px]:text-[2.8rem] sm:text-[3.2rem] font-black leading-tight tracking-tight text-slate-900 dark:text-white Montserrat">
             Barakah<span className="text-emerald-500">Flow</span>
           </h1>
           <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-[10px] ml-1">
