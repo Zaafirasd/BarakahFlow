@@ -262,7 +262,7 @@ export default function AddTransactionPage() {
               <div className="group rounded-[2rem] border border-slate-100 bg-white p-2 dark:border-white/5 dark:bg-white/5 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all shadow-sm">
                 <input
                   type="text"
-                  placeholder="Where did you spend?"
+                  placeholder={type === 'expense' ? "Where did you spend?" : "Where did this income come from?"}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full bg-transparent px-4 py-4 text-sm font-bold text-slate-900 placeholder-slate-300 focus:outline-none dark:text-white dark:placeholder-white/10 Montserrat"

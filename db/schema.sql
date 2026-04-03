@@ -5,15 +5,11 @@
 -- =============================================
 
 -- =============================================
--- DROP EXISTING TABLES (child → parent order)
+-- BASE SCHEMA SETUP
 -- =============================================
-DROP TABLE IF EXISTS public.app_analytics CASCADE;
-DROP TABLE IF EXISTS public.bills CASCADE;
-DROP TABLE IF EXISTS public.budgets CASCADE;
-DROP TABLE IF EXISTS public.transactions CASCADE;
-DROP TABLE IF EXISTS public.categories CASCADE;
-DROP TABLE IF EXISTS public.accounts CASCADE;
-DROP TABLE IF EXISTS public.users CASCADE;
+-- This schema is designed to be idempotent and safe to rerun.
+-- Existing data will NOT be deleted.
+
 
 DROP FUNCTION IF EXISTS public.increment_metric(TEXT);
 DROP FUNCTION IF EXISTS public.pay_bill(UUID, UUID, DECIMAL, DATE, UUID, TEXT);
@@ -22,7 +18,7 @@ DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 -- =============================================
 -- TABLE: users
 -- =============================================
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
   id                          UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email                       TEXT        NOT NULL,
   name                        TEXT,
@@ -42,7 +38,7 @@ CREATE TABLE public.users (
 -- =============================================
 -- TABLE: accounts
 -- =============================================
-CREATE TABLE public.accounts (
+CREATE TABLE IF NOT EXISTS public.accounts (
   id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id          UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   name             TEXT        NOT NULL DEFAULT 'Main Account',
@@ -56,7 +52,7 @@ CREATE TABLE public.accounts (
 -- =============================================
 -- TABLE: categories
 -- =============================================
-CREATE TABLE public.categories (
+CREATE TABLE IF NOT EXISTS public.categories (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID        REFERENCES public.users(id) ON DELETE CASCADE,
   name        TEXT        NOT NULL,
@@ -72,7 +68,7 @@ CREATE TABLE public.categories (
 -- =============================================
 -- TABLE: transactions
 -- =============================================
-CREATE TABLE public.transactions (
+CREATE TABLE IF NOT EXISTS public.transactions (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id        UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   account_id     UUID        NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
@@ -89,7 +85,7 @@ CREATE TABLE public.transactions (
 -- =============================================
 -- TABLE: budgets
 -- =============================================
-CREATE TABLE public.budgets (
+CREATE TABLE IF NOT EXISTS public.budgets (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   category_id  UUID        NOT NULL REFERENCES public.categories(id),
@@ -103,7 +99,7 @@ CREATE TABLE public.budgets (
 -- =============================================
 -- TABLE: bills
 -- =============================================
-CREATE TABLE public.bills (
+CREATE TABLE IF NOT EXISTS public.bills (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id        UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   name           TEXT        NOT NULL,
@@ -119,7 +115,7 @@ CREATE TABLE public.bills (
 -- =============================================
 -- TABLE: app_analytics (zero-knowledge aggregates)
 -- =============================================
-CREATE TABLE public.app_analytics (
+CREATE TABLE IF NOT EXISTS public.app_analytics (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   date        DATE        NOT NULL DEFAULT CURRENT_DATE,
   metric      TEXT        NOT NULL,
@@ -132,53 +128,111 @@ CREATE TABLE public.app_analytics (
 -- INDEXES — Performance
 -- =============================================
 
-CREATE INDEX idx_transactions_user_date      ON public.transactions(user_id, date DESC);
-CREATE INDEX idx_transactions_user_type_date ON public.transactions(user_id, type, date DESC);
-CREATE INDEX idx_transactions_user_category  ON public.transactions(user_id, category_id);
-CREATE INDEX idx_budgets_user_active         ON public.budgets(user_id, is_active);
-CREATE INDEX idx_bills_user_active           ON public.bills(user_id, is_active, next_due_date);
-CREATE INDEX idx_accounts_user_active        ON public.accounts(user_id, is_active);
-CREATE INDEX idx_categories_system           ON public.categories(is_system, type);
-CREATE INDEX idx_categories_user             ON public.categories(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_date      ON public.transactions(user_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_type_date ON public.transactions(user_id, type, date DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_category  ON public.transactions(user_id, category_id);
+CREATE INDEX IF NOT EXISTS idx_budgets_user_active         ON public.budgets(user_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_bills_user_active           ON public.bills(user_id, is_active, next_due_date);
+CREATE INDEX IF NOT EXISTS idx_accounts_user_active        ON public.accounts(user_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_categories_system           ON public.categories(is_system, type);
+CREATE INDEX IF NOT EXISTS idx_categories_user             ON public.categories(user_id);
 
 -- =============================================
 -- ROW LEVEL SECURITY
 -- =============================================
 
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users_select" ON public.users FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "users_insert" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "users_update" ON public.users FOR UPDATE USING (auth.uid() = id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'users_select') THEN
+    CREATE POLICY "users_select" ON public.users FOR SELECT USING (auth.uid() = id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'users_insert') THEN
+    CREATE POLICY "users_insert" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'users_update') THEN
+    CREATE POLICY "users_update" ON public.users FOR UPDATE USING (auth.uid() = id);
+  END IF;
+END $$;
 
 ALTER TABLE public.accounts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "accounts_select" ON public.accounts FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "accounts_insert" ON public.accounts FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "accounts_update" ON public.accounts FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "accounts_delete" ON public.accounts FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'accounts' AND policyname = 'accounts_select') THEN
+    CREATE POLICY "accounts_select" ON public.accounts FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'accounts' AND policyname = 'accounts_insert') THEN
+    CREATE POLICY "accounts_insert" ON public.accounts FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'accounts' AND policyname = 'accounts_update') THEN
+    CREATE POLICY "accounts_update" ON public.accounts FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'accounts' AND policyname = 'accounts_delete') THEN
+    CREATE POLICY "accounts_delete" ON public.accounts FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "categories_select" ON public.categories FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
-CREATE POLICY "categories_insert" ON public.categories FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "categories_update" ON public.categories FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "categories_delete" ON public.categories FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_select') THEN
+    CREATE POLICY "categories_select" ON public.categories FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_insert') THEN
+    CREATE POLICY "categories_insert" ON public.categories FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_update') THEN
+    CREATE POLICY "categories_update" ON public.categories FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_delete') THEN
+    CREATE POLICY "categories_delete" ON public.categories FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "transactions_select" ON public.transactions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "transactions_insert" ON public.transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "transactions_update" ON public.transactions FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "transactions_delete" ON public.transactions FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'transactions' AND policyname = 'transactions_select') THEN
+    CREATE POLICY "transactions_select" ON public.transactions FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'transactions' AND policyname = 'transactions_insert') THEN
+    CREATE POLICY "transactions_insert" ON public.transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'transactions' AND policyname = 'transactions_update') THEN
+    CREATE POLICY "transactions_update" ON public.transactions FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'transactions' AND policyname = 'transactions_delete') THEN
+    CREATE POLICY "transactions_delete" ON public.transactions FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "budgets_select" ON public.budgets FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "budgets_insert" ON public.budgets FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "budgets_update" ON public.budgets FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "budgets_delete" ON public.budgets FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'budgets' AND policyname = 'budgets_select') THEN
+    CREATE POLICY "budgets_select" ON public.budgets FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'budgets' AND policyname = 'budgets_insert') THEN
+    CREATE POLICY "budgets_insert" ON public.budgets FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'budgets' AND policyname = 'budgets_update') THEN
+    CREATE POLICY "budgets_update" ON public.budgets FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'budgets' AND policyname = 'budgets_delete') THEN
+    CREATE POLICY "budgets_delete" ON public.budgets FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 ALTER TABLE public.bills ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "bills_select" ON public.bills FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "bills_insert" ON public.bills FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "bills_update" ON public.bills FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "bills_delete" ON public.bills FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bills' AND policyname = 'bills_select') THEN
+    CREATE POLICY "bills_select" ON public.bills FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bills' AND policyname = 'bills_insert') THEN
+    CREATE POLICY "bills_insert" ON public.bills FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bills' AND policyname = 'bills_update') THEN
+    CREATE POLICY "bills_update" ON public.bills FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bills' AND policyname = 'bills_delete') THEN
+    CREATE POLICY "bills_delete" ON public.bills FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 ALTER TABLE public.app_analytics ENABLE ROW LEVEL SECURITY;
 
@@ -260,35 +314,45 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- =============================================
--- SEED: System Categories
+-- SEED: System Categories (Idempotent)
 -- =============================================
-INSERT INTO public.categories (name, type, icon, color, is_system, is_islamic, sort_order) VALUES
-('Housing',           'expense', 'Home',            '#6366F1', TRUE, FALSE,  1),
-('Utilities',         'expense', 'Zap',             '#F59E0B', TRUE, FALSE,  2),
-('Groceries & Food',  'expense', 'ShoppingCart',    '#22C55E', TRUE, FALSE,  3),
-('Dining Out',        'expense', 'UtensilsCrossed', '#F97316', TRUE, FALSE,  4),
-('Transportation',    'expense', 'Car',             '#3B82F6', TRUE, FALSE,  5),
-('Healthcare',        'expense', 'Heart',           '#EF4444', TRUE, FALSE,  6),
-('Education',         'expense', 'GraduationCap',   '#8B5CF6', TRUE, FALSE,  7),
-('Clothing',          'expense', 'Shirt',           '#EC4899', TRUE, FALSE,  8),
-('Entertainment',     'expense', 'Gamepad2',        '#14B8A6', TRUE, FALSE,  9),
-('Subscriptions',     'expense', 'CreditCard',      '#6366F1', TRUE, FALSE, 10),
-('Government & Fees', 'expense', 'Building',        '#64748B', TRUE, FALSE, 11),
-('Miscellaneous',     'expense', 'MoreHorizontal',  '#94A3B8', TRUE, FALSE, 12),
-('Stocks',            'expense', 'TrendingUp',      '#3B82F6', TRUE, FALSE, 13),
-('Gold',              'expense', 'CircleDollarSign','#F59E0B', TRUE, FALSE, 14),
-('Commodities',       'expense', 'Landmark',        '#8B5CF6', TRUE, FALSE, 15),
-('Phone Bill',        'expense', 'Phone',           '#0EA5E9', TRUE, FALSE, 16),
-('Internet / TV',     'expense', 'Wifi',            '#EC4899', TRUE, FALSE, 17),
-('Zakat Al-Mal',      'expense', 'HandCoins',       '#10B981', TRUE, TRUE,  18),
-('Zakat Al-Fitr',     'expense', 'HandCoins',       '#10B981', TRUE, TRUE,  19),
-('Sadaqah',           'expense', 'HeartHandshake',  '#10B981', TRUE, TRUE,  20),
-('Hajj / Umrah',      'expense', 'Plane',           '#10B981', TRUE, TRUE,  21),
-('Eid Expenses',      'expense', 'Gift',            '#10B981', TRUE, TRUE,  22),
-('Salary',            'income',  'Banknote',        '#22C55E', TRUE, FALSE,  1),
-('Freelance',         'income',  'Laptop',          '#3B82F6', TRUE, FALSE,  2),
-('Business Revenue',  'income',  'TrendingUp',      '#10B981', TRUE, FALSE,  3),
-('Other Income',      'income',  'Plus',            '#64748B', TRUE, FALSE,  4);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.categories WHERE is_system = TRUE LIMIT 1) THEN
+        INSERT INTO public.categories (name, type, icon, color, is_system, is_islamic, sort_order) VALUES
+        ('Housing',           'expense', 'Home',            '#6366F1', TRUE, FALSE,  1),
+        ('Utilities',         'expense', 'Zap',             '#F59E0B', TRUE, FALSE,  2),
+        ('Groceries & Food',  'expense', 'ShoppingCart',    '#22C55E', TRUE, FALSE,  3),
+        ('Dining Out',        'expense', 'UtensilsCrossed', '#F97316', TRUE, FALSE,  4),
+        ('Transportation',    'expense', 'Car',             '#3B82F6', TRUE, FALSE,  5),
+        ('Healthcare',        'expense', 'Heart',           '#EF4444', TRUE, FALSE,  6),
+        ('Education',         'expense', 'GraduationCap',   '#8B5CF6', TRUE, FALSE,  7),
+        ('Clothing',          'expense', 'Shirt',           '#EC4899', TRUE, FALSE,  8),
+        ('Entertainment',     'expense', 'Gamepad2',        '#14B8A6', TRUE, FALSE,  9),
+        ('Subscriptions',     'expense', 'CreditCard',      '#6366F1', TRUE, FALSE, 10),
+        ('Government & Fees', 'expense', 'Building',        '#64748B', TRUE, FALSE, 11),
+        ('Miscellaneous',     'expense', 'MoreHorizontal',  '#94A3B8', TRUE, FALSE, 12),
+        ('Stocks',            'expense', 'TrendingUp',      '#3B82F6', TRUE, FALSE, 13),
+        ('Gold',              'expense', 'CircleDollarSign','#F59E0B', TRUE, FALSE, 14),
+        ('Commodities',       'expense', 'Landmark',        '#8B5CF6', TRUE, FALSE, 15),
+        ('Phone Bill',        'expense', 'Phone',           '#0EA5E9', TRUE, FALSE, 16),
+        ('Internet / TV',     'expense', 'Wifi',            '#EC4899', TRUE, FALSE, 17),
+        ('Zakat Al-Mal',      'expense', 'HandCoins',       '#10B981', TRUE, TRUE,  18),
+        ('Zakat Al-Fitr',     'expense', 'HandCoins',       '#10B981', TRUE, TRUE,  19),
+        ('Sadaqah',           'expense', 'HeartHandshake',  '#10B981', TRUE, TRUE,  20),
+        ('Hajj / Umrah',      'expense', 'Plane',           '#10B981', TRUE, TRUE,  21),
+        ('Eid Expenses',      'expense', 'Gift',            '#10B981', TRUE, TRUE,  22),
+        ('Salary',            'income',  'Banknote',        '#22C55E', TRUE, FALSE,  1),
+        ('Freelance',         'income',  'Laptop',          '#3B82F6', TRUE, FALSE,  2),
+        ('Business Revenue',  'income',  'TrendingUp',      '#10B981', TRUE, FALSE,  3),
+        ('Pocket Money',      'income',  'Gift',            '#F59E0B', TRUE, FALSE,  4),
+        ('Gifts / Bonus',     'income',  'Trophy',          '#EC4899', TRUE, FALSE,  5),
+        ('Investment Income', 'income',  'BarChart3',       '#8B5CF6', TRUE, FALSE,  6),
+        ('Cashback',          'income',  'Wallet',          '#0EA5E9', TRUE, FALSE,  7),
+        ('Other Income',      'income',  'Plus',            '#64748B', TRUE, FALSE,  8);
+    END IF;
+END $$;
+
 
 -- =============================================
 -- BACKFILL: Create profiles + accounts for existing auth users
