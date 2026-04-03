@@ -83,6 +83,12 @@ function SignInForm() {
       const hasAccounts = (profile as any)?.accounts?.length > 0;
       const needsOnboarding = !profile?.onboarding_completed || !hasAccounts;
 
+      if (needsOnboarding) {
+        document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      } else {
+        document.cookie = 'bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax';
+      }
+
       trackEvent(METRICS.SIGNIN);
       router.push(needsOnboarding ? '/onboarding' : '/dashboard');
     } catch {

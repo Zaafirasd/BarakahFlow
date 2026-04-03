@@ -24,6 +24,7 @@ export default function MorePage() {
     setSigningOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
+    document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     router.refresh();
     router.replace('/signin');
   };

@@ -60,6 +60,7 @@ export default function SignUpPage() {
         
         // If session exists, they are auto-confirmed (or email confirmation is off)
         if (data.session) {
+          document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           router.push('/onboarding');
         } else {
           // Email confirmation is required

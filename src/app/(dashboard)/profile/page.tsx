@@ -355,6 +355,7 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     router.replace('/signin');
   };
 
@@ -385,6 +386,7 @@ export default function ProfilePage() {
       // Force signout client-side and redirect
       const supabase = createClient();
       await supabase.auth.signOut();
+      document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       router.replace('/signin');
       
     } catch (err) {
