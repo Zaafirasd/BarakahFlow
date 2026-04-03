@@ -12,7 +12,6 @@ import PageTransition from '@/components/ui/PageTransition';
 import Toast from '@/components/ui/Toast';
 import { CURRENCIES } from '@/lib/constants/categories';
 import { createClient } from '@/lib/supabase/client';
-import { inferBudgetStyle } from '@/lib/utils/budgeting';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { formatDateLabel, formatDayLabel } from '@/lib/utils/getFinancialMonth';
 import { sanitizeText, validateAmount, validateEmail } from '@/lib/utils/validation';
@@ -157,7 +156,6 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
-  const budgetStyle = useMemo(() => inferBudgetStyle(budgets, user?.monthly_income || null), [budgets, user?.monthly_income]);
   const avatarLetter = (user?.name || user?.email || 'B').charAt(0).toUpperCase();
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -443,7 +441,6 @@ export default function ProfilePage() {
               value={user?.monthly_income ? formatCurrency(user.monthly_income, user.primary_currency) : 'Not set'}
               onClick={() => setActiveSheet('income')}
             />
-            <SettingsRow label="Budget Style" value={budgetStyle} />
           </SettingsSection>
 
           <SettingsSection title="Islamic Finance">
