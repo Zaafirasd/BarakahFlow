@@ -11,7 +11,6 @@ import LucideIcon from '@/components/ui/LucideIcon';
 import PageTransition from '@/components/ui/PageTransition';
 import Toast from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
-import { buildAutoBudgetPlan } from '@/lib/utils/budgeting';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { formatDateLabel, getFinancialMonthLabel, getFinancialMonthRange } from '@/lib/utils/getFinancialMonth';
 import type { Budget, Category, Transaction, User } from '@/types';
@@ -114,7 +113,6 @@ export default function BudgetPage() {
     message: '',
     tone: 'success',
   });
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const referenceDate = useMemo(() => getReferenceDate(monthOffset), [monthOffset]);
@@ -267,7 +265,6 @@ export default function BudgetPage() {
   const openEditor = () => {
     if (!isCurrentMonthView) return;
     setDraftBudgets(budgetDrafts);
-    setShowResetConfirm(false);
     setEditOpen(true);
   };
 
@@ -331,22 +328,7 @@ export default function BudgetPage() {
     await loadBudgetView();
   };
 
-  const applyAutoBudgetDraft = () => {
-    if (!monthlyIncome) {
-      setToast({ message: 'Add your monthly income in Profile first', tone: 'error' });
-      return;
-    }
 
-    const autoPlan = buildAutoBudgetPlan(categories, monthlyIncome);
-    const nextDrafts = autoPlan.reduce<Record<string, string>>((acc, item) => {
-      acc[item.categoryId] = item.amount.toFixed(2);
-      return acc;
-    }, {});
-
-    setDraftBudgets(nextDrafts);
-    setShowResetConfirm(false);
-    setToast({ message: 'Recommended split loaded', tone: 'success' });
-  };
 
   if (loading) {
     return (
@@ -597,7 +579,6 @@ export default function BudgetPage() {
           isOpen={editOpen}
           onClose={() => {
             setEditOpen(false);
-            setShowResetConfirm(false);
           }}
           title="Edit Budgets"
           footer={
@@ -605,13 +586,6 @@ export default function BudgetPage() {
               <Button fullWidth onClick={handleSaveBudgets} loading={saving} className="rounded-3xl py-5 text-base font-bold">
                 Save Budgets
               </Button>
-              <button
-                type="button"
-                onClick={() => setShowResetConfirm((current) => !current)}
-                className="w-full text-center text-sm font-bold text-emerald-500"
-              >
-                Reset to Auto
-              </button>
             </div>
           }
         >
@@ -646,19 +620,6 @@ export default function BudgetPage() {
               ) : null}
             </div>
 
-            {showResetConfirm ? (
-              <div className="rounded-[1.6rem] border border-emerald-500/20 bg-emerald-500/10 p-4">
-                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300">Reset all budgets to the recommended split?</p>
-                <div className="mt-3 flex gap-2">
-                  <Button variant="secondary" fullWidth onClick={() => setShowResetConfirm(false)}>
-                    Cancel
-                  </Button>
-                  <Button fullWidth onClick={applyAutoBudgetDraft}>
-                    Apply Auto Split
-                  </Button>
-                </div>
-              </div>
-            ) : null}
 
             <div className="space-y-5">
               <div>

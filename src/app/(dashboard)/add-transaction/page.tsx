@@ -222,26 +222,31 @@ export default function AddTransactionPage() {
                 <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Select Category</h3>
                 <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Required</span>
               </div>
-              <div className="grid grid-cols-4 gap-2.5">
+              <div className="flex flex-col gap-2.5 max-h-[350px] overflow-y-auto px-1 snap-y pb-2 no-scrollbar">
                 {categories.map(cat => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all active:scale-90 ${
+                    className={`flex items-center gap-4 p-3 rounded-2xl border transition-all active:scale-[0.98] shrink-0 snap-start text-left ${
                       selectedCategory?.id === cat.id
                         ? 'border-emerald-500 bg-emerald-500/5 ring-1 ring-emerald-500/20'
                         : 'border-slate-100 bg-white dark:border-white/5 dark:bg-white/5'
                     }`}
                   >
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                      className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm shrink-0"
                       style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
                     >
-                      <LucideIcon name={cat.icon} className="w-5 h-5" />
+                      <LucideIcon name={cat.icon} className="w-6 h-6" />
                     </div>
-                    <span className="truncate w-full px-1 text-[9px] font-extrabold uppercase tracking-tighter text-slate-700 dark:text-slate-300">
+                    <span className="flex-1 text-sm font-bold text-slate-800 dark:text-slate-200">
                       {cat.name}
                     </span>
+                    {selectedCategory?.id === cat.id && (
+                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                         <Check className="h-4 w-4 stroke-[3]" />
+                       </div>
+                    )}
                   </button>
                 ))}
               </div>
