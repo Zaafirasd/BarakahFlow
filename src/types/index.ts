@@ -11,6 +11,9 @@ export interface User {
   zakat_inputs?: Record<string, unknown> | null;
   gold_grams: number;
   onboarding_completed: boolean;
+  zakat_fitr_rate_per_person?: number | null;
+  zakat_fitr_currency?: string | null;
+  zakat_fitr_last_reviewed_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -50,6 +53,12 @@ export interface Transaction {
   date: string;
   type: 'income' | 'expense';
   category?: Category;
+  zakat_fitr_meta?: {
+    familyMemberCount: number;
+    ratePerPerson: number;
+    currency: string;
+    source: string;
+  } | null;
   created_at?: string;
   updated_at?: string;
 }

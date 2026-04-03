@@ -1,8 +1,7 @@
+import { GOLD_NISAB_GRAMS, SILVER_NISAB_GRAMS, ZAKAT_RATE } from '../zakat/constants';
 import type { Account, Transaction } from '@/types';
 
-export const NISAB_GOLD_GRAMS = 87.48; // Standard 24K gold Nisab
-export const FALLBACK_GOLD_PRICE_AED = 561.42;
-export const ZAKAT_RATE = 0.025; // 2.5% — update annually if needed
+export { GOLD_NISAB_GRAMS, SILVER_NISAB_GRAMS, ZAKAT_RATE };
 export const ZAKAT_LOCAL_STORAGE_PREFIX = 'barakahflow:zakat-calculation';
 
 export interface ZakatInputs {
@@ -65,35 +64,5 @@ export function getNextAnniversary(anniversaryDate: string | null, referenceDate
   return {
     date: next,
     daysUntil: Math.ceil(diff / (1000 * 60 * 60 * 24)),
-  };
-}
-
-export function calculateZakat(
-  cashAndBankBalance: number,
-  inputs: ZakatInputs,
-  goldPrice: number = FALLBACK_GOLD_PRICE_AED
-): ZakatCalculationResult {
-  const nisab = goldPrice * NISAB_GOLD_GRAMS;
-  const cashAndBank = cashAndBankBalance + inputs.cashOnHand;
-  const goldAndSilver = inputs.goldValue + inputs.silverValue;
-  const investments = inputs.investmentValue + inputs.sukukValue;
-  const receivables = inputs.loansGiven + inputs.otherReceivables;
-  const totalAssets = cashAndBank + goldAndSilver + investments + receivables;
-  const deductions = inputs.debtsDue + inputs.essentialExpenses;
-  const netZakatable = totalAssets - deductions;
-  const aboveNisab = netZakatable >= nisab;
-  const zakatDue = aboveNisab ? netZakatable * ZAKAT_RATE : 0;
-
-  return {
-    totalAssets,
-    cashAndBank,
-    goldAndSilver,
-    investments,
-    receivables,
-    deductions,
-    netZakatable,
-    zakatDue,
-    aboveNisab,
-    nisab,
   };
 }

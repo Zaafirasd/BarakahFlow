@@ -12,28 +12,37 @@ import Toast from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { sanitizeText, validateAmount } from '@/lib/utils/validation';
-import { calculateAccountsTotal, calculateZakat, getNextAnniversary, getZakatStorageKey, type ZakatCalculationResult, type ZakatInputs } from '@/lib/utils/zakat';
+import { calculateAccountsTotal, getNextAnniversary, getZakatStorageKey } from '@/lib/utils/zakat';
+import { calculateZakat, calculateNisab, type ZakatInputs as NewZakatInputs } from '@/lib/zakat/calculations';
+import { GOLD_NISAB_GRAMS, SILVER_NISAB_GRAMS, DEFAULT_ZAKAT_AL_FITR_RATE_AED, type NisabBasis } from '@/lib/zakat/constants';
 import type { Account, Category, Transaction, User } from '@/types';
 
 type TransactionWithCategory = Transaction & { category?: Category | null };
 type PaymentKind = 'mal' | 'fitr';
 type ExpandableSection = 'cash' | 'gold' | 'investments' | 'receivables' | 'deductions' | null;
 
-interface PaymentFormState {
-  amount: string;
-  recipient: string;
-  date: string;
-  notes: string;
+interface ZakatInputs {
+  cashOnHand: number;
+  goldValue: number;
+  silverValue: number;
+  investmentValue: number;
+  sukukValue: number;
+  loansGiven: number;
+  otherReceivables: number;
+  debtsDue: number;
+  essentialExpenses: number;
 }
-
-interface PaymentErrors {
-  amount?: string;
-  date?: string;
-}
-
+ 
 interface StoredZakatCalculation {
   inputs: ZakatInputs;
-  result: ZakatCalculationResult;
+  result: {
+    totalAssets: number;
+    totalDeductions: number;
+    netZakatableWealth: number;
+    nisabValue: number;
+    isAboveNisab: boolean;
+    zakatDue: number;
+  };
   updatedAt: string;
 }
 
@@ -104,6 +113,18 @@ function ExpandableCard({
   );
 }
 
+interface PaymentFormState {
+  amount: string;
+  recipient: string;
+  date: string;
+  notes: string;
+}
+
+interface PaymentErrors {
+  amount?: string;
+  date?: string;
+}
+
 export default function ZakatPage() {
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -114,6 +135,8 @@ export default function ZakatPage() {
   const [expandedSection, setExpandedSection] = useState<ExpandableSection>('cash');
   const [inputs, setInputs] = useState<ZakatInputs>(DEFAULT_INPUTS);
   const [goldPrice, setGoldPrice] = useState<number>(561.42);
+  const [silverPrice, setSilverPrice] = useState<number>(3.65);
+  const [nisabBasis, setNisabBasis] = useState<NisabBasis>('silver');
   const [storedCalculation, setStoredCalculation] = useState<StoredZakatCalculation | null>(null);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [paymentKind, setPaymentKind] = useState<PaymentKind>('mal');
@@ -125,6 +148,7 @@ export default function ZakatPage() {
   });
   const [paymentErrors, setPaymentErrors] = useState<PaymentErrors>({});
   const [familyCount, setFamilyCount] = useState('1');
+  const [fitrRate, setFitrRate] = useState<string>(String(DEFAULT_ZAKAT_AL_FITR_RATE_AED));
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' | 'info' }>({
     message: '',
@@ -176,8 +200,12 @@ export default function ZakatPage() {
       const profile = profileResult.data as User;
       setUser(profile);
 
+      if (profile.zakat_fitr_rate_per_person) {
+        setFitrRate(String(profile.zakat_fitr_rate_per_person));
+      }
+
       if (isStoredZakatCalculation(profile.zakat_inputs)) {
-        const stored = profile.zakat_inputs;
+        const stored = profile.zakat_inputs as StoredZakatCalculation;
         setStoredCalculation(stored);
         setInputs(stored.inputs);
       } else {
@@ -205,9 +233,12 @@ export default function ZakatPage() {
 
     if (goldRes?.ok) {
       try {
-        const goldData = await goldRes.json() as { price_per_gram?: number };
-        if (goldData.price_per_gram) {
-          setGoldPrice(goldData.price_per_gram);
+        const metalData = await goldRes.json() as { price_per_gram_gold?: number; price_per_gram_silver?: number };
+        if (metalData.price_per_gram_gold) {
+          setGoldPrice(metalData.price_per_gram_gold);
+        }
+        if (metalData.price_per_gram_silver) {
+          setSilverPrice(metalData.price_per_gram_silver);
         }
       } catch { /* fallback already set */ }
     }
@@ -225,8 +256,28 @@ export default function ZakatPage() {
 
   const currency = user?.primary_currency || 'AED';
   const cashAndBankBalance = useMemo(() => calculateAccountsTotal(accounts, transactions), [accounts, transactions]);
-  const calculatedResult = useMemo(() => calculateZakat(cashAndBankBalance, inputs, goldPrice), [cashAndBankBalance, inputs, goldPrice]);
+  
+  const currentMetalPrice = nisabBasis === 'gold' ? goldPrice : silverPrice;
+  const nisabValue = useMemo(() => calculateNisab(currentMetalPrice, nisabBasis), [currentMetalPrice, nisabBasis]);
+
+  const calculatedResult = useMemo(() => {
+    const calculationInputs: NewZakatInputs = {
+      cash: inputs.cashOnHand,
+      bankBalances: cashAndBankBalance,
+      goldValue: inputs.goldValue,
+      silverValue: inputs.silverValue,
+      investmentsValue: inputs.investmentValue + inputs.sukukValue,
+      receivablesLikelyToBePaid: inputs.loansGiven + inputs.otherReceivables,
+      shortTermDebts: inputs.debtsDue,
+      immediateBillsDue: inputs.essentialExpenses,
+      nisabValue,
+      nisabBasis,
+    };
+    return calculateZakat(calculationInputs);
+  }, [cashAndBankBalance, inputs, nisabValue, nisabBasis]);
+
   const nextAnniversary = useMemo(() => getNextAnniversary(user?.zakat_anniversary_date || null), [user?.zakat_anniversary_date]);
+  
   const paymentHistory = useMemo(
     () =>
       transactions.filter((transaction) => {
@@ -235,6 +286,7 @@ export default function ZakatPage() {
       }),
     [transactions]
   );
+
   const totalPaidThisYear = useMemo(() => {
     const currentYear = new Date().getFullYear();
     return paymentHistory.reduce((sum, transaction) => {
@@ -242,7 +294,8 @@ export default function ZakatPage() {
       return transactionYear === currentYear ? sum + Math.abs(Number(transaction.amount)) : sum;
     }, 0);
   }, [paymentHistory]);
-  const fitrTotal = Math.max(Number(familyCount) || 0, 0) * 25;
+
+  const fitrTotal = Math.max(Number(familyCount) || 0, 0) * (Number(fitrRate) || DEFAULT_ZAKAT_AL_FITR_RATE_AED);
 
   const setInput = (field: keyof ZakatInputs, value: string) => {
     const parsed = Number(value);
@@ -271,14 +324,13 @@ export default function ZakatPage() {
     setSaving(false);
     
     if (error) {
-      setToast({ message: 'Cloud sync failed, saving locally', tone: 'error' });
-      // Fallback save to localStorage if Supabase fails
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(getZakatStorageKey(user.id), JSON.stringify(payload));
-      }
-    } else {
-      setToast({ message: calculatedResult.aboveNisab ? 'Zakat estimate synced' : 'Calculation saved to cloud', tone: 'success' });
-    }
+       setToast({ message: 'Cloud sync failed, saving locally', tone: 'error' });
+       if (typeof window !== 'undefined') {
+         window.localStorage.setItem(getZakatStorageKey(user.id), JSON.stringify(payload));
+       }
+     } else {
+       setToast({ message: calculatedResult.isAboveNisab ? 'Zakat estimate synced' : 'Calculation saved to cloud', tone: 'success' });
+     }
     
     setStoredCalculation(payload);
   };
@@ -339,6 +391,12 @@ export default function ZakatPage() {
       description: sanitizeText(paymentForm.notes, 200) || null,
       date: paymentForm.date,
       type: 'expense',
+      zakat_fitr_meta: paymentKind === 'fitr' ? {
+        familyMemberCount: Number(familyCount),
+        ratePerPerson: Number(fitrRate),
+        currency: currency,
+        source: 'user_confirmed'
+      } : null,
     });
     setSaving(false);
 
@@ -436,23 +494,67 @@ export default function ZakatPage() {
             </div>
           </Card>
 
+          {/* Nisab Basis Toggle */}
+          <Card className="border border-white/70 bg-white/82 p-4 dark:border-white/10 dark:bg-slate-900/76 rounded-[1.5rem] shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Nisab Basis</p>
+                <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Using {nisabBasis === 'gold' ? 'Gold (85g)' : 'Silver (612.36g)'}
+                </p>
+              </div>
+              <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl">
+                <button
+                  onClick={() => setNisabBasis('silver')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${nisabBasis === 'silver' ? 'bg-white dark:bg-slate-800 text-emerald-500 shadow-sm' : 'text-slate-400'}`}
+                >
+                  Silver
+                </button>
+                <button
+                  onClick={() => setNisabBasis('gold')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${nisabBasis === 'gold' ? 'bg-white dark:bg-slate-800 text-amber-500 shadow-sm' : 'text-slate-400'}`}
+                >
+                  Gold
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-[10px] font-medium text-slate-500">
+              <span>Current {nisabBasis === 'gold' ? 'Gold' : 'Silver'} Price</span>
+              <span className="font-bold">{formatCurrency(currentMetalPrice, currency)}/g</span>
+            </div>
+          </Card>
+
           <Card className="border border-white/70 bg-white/82 p-6 dark:border-white/10 dark:bg-slate-900/76 rounded-[2rem] shadow-sm">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Zakat Al-Fitr</p>
                 <p className="mt-3 text-2xl font-black tracking-tight text-slate-900 dark:text-white">{formatCurrency(fitrTotal, currency)}</p>
-                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Calculated at 25 per family member.</p>
+                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 italic opacity-80">
+                  Local estimate. Please confirm with your authority.
+                </p>
               </div>
-              <div className="w-28">
-                <label className="ml-3 text-[11px] font-bold text-slate-400">Family Count</label>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min="1"
-                  value={familyCount}
-                  onChange={(event) => setFamilyCount(event.target.value)}
-                  className="mt-1 w-full rounded-[1.2rem] border border-slate-200 bg-white px-4 py-3 text-center text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
-                />
+              <div className="flex gap-2">
+                <div className="w-20">
+                  <label className="ml-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Rate</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={fitrRate}
+                    onChange={(event) => setFitrRate(event.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  />
+                </div>
+                <div className="w-20">
+                  <label className="ml-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Family</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="1"
+                    value={familyCount}
+                    onChange={(event) => setFamilyCount(event.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  />
+                </div>
               </div>
             </div>
             <div className="mt-5">
@@ -616,21 +718,27 @@ export default function ZakatPage() {
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-6">Wealth Summary</p>
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-500">Gross Wealth</span>
-                <span className="font-black text-slate-900 dark:text-white text-base">{formatCurrency(calculatedResult.totalAssets, currency)}</span>
+                 <span className="font-bold text-slate-500">Gross Wealth</span>
+                 <span className="font-black text-slate-900 dark:text-white text-base">{formatCurrency(calculatedResult.netZakatableWealth + (calculatedResult.totalDeductions || 0), currency)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-500">Nisab Threshold</span>
+                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                  {formatCurrency(nisabValue, currency)}
+                </span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
                 <span className="font-bold text-slate-500">Cloud Deductions</span>
-                <span className="font-black text-rose-500 text-base">-{formatCurrency(calculatedResult.deductions, currency)}</span>
+                <span className="font-black text-rose-500 text-base">-{formatCurrency(calculatedResult.totalDeductions, currency)}</span>
               </div>
               <div className="flex items-center justify-between pt-2">
                 <span className="font-bold text-slate-900 dark:text-white text-base">Net Zakatable</span>
-                <span className="font-black text-emerald-500 text-lg tracking-tighter">{formatCurrency(calculatedResult.netZakatable, currency)}</span>
+                <span className="font-black text-emerald-500 text-lg tracking-tighter">{formatCurrency(calculatedResult.netZakatableWealth, currency)}</span>
               </div>
             </div>
 
-            <div className={`mt-6 rounded-[1.8rem] border-2 px-5 py-5 transition-all duration-500 ${calculatedResult.aboveNisab ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-slate-100 bg-slate-50 dark:bg-white/5 dark:border-white/5'}`}>
-              {calculatedResult.aboveNisab ? (
+            <div className={`mt-6 rounded-[1.8rem] border-2 px-5 py-5 transition-all duration-500 ${calculatedResult.isAboveNisab ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-slate-100 bg-slate-50 dark:bg-white/5 dark:border-white/5'}`}>
+              {calculatedResult.isAboveNisab ? (
                 <>
                   <div className="flex items-center gap-2 mb-2">
                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -648,7 +756,7 @@ export default function ZakatPage() {
                 <div className="py-2 text-center">
                   <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Below Nisab Threshold</p>
                   <p className="mt-1 text-xs font-medium text-slate-500 px-4">
-                    Your wealth is below {formatCurrency(calculatedResult.nisab, 'AED')}. No Zakat is due at this time.
+                    Your wealth is below the {nisabBasis} Nisab ({formatCurrency(nisabValue, currency)}). No Zakat is due at this time.
                   </p>
                 </div>
               )}

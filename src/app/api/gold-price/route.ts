@@ -1,11 +1,33 @@
 import { NextResponse, NextRequest } from 'next/server';
 
-const FALLBACK_PRICE_AED = 561.42; // Update periodically — ~24K gold per gram in AED
+const FALLBACK_GOLD_PRICE_AED = 561.42;
+const FALLBACK_SILVER_PRICE_AED = 3.65;
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
-let cachedPrice: number = FALLBACK_PRICE_AED;
+let cachedGoldPrice: number = FALLBACK_GOLD_PRICE_AED;
+let cachedSilverPrice: number = FALLBACK_SILVER_PRICE_AED;
 let lastFetchTime = 0;
 let cachedCurrency = 'AED';
+
+async function fetchMetalPrice(metal: 'XAU' | 'XAG', currency: string, apiKey: string) {
+  try {
+    const res = await fetch(`https://www.goldapi.io/api/${metal}/${currency}`, {
+      headers: {
+        'x-access-token': apiKey,
+      },
+      next: { revalidate: 3600 },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      // GoldAPI returns price per troy ounce; convert to grams (1 troy oz = 31.1035 g)
+      return data.price / 31.1035;
+    }
+  } catch (error) {
+    console.error(`Error fetching ${metal} price:`, error);
+  }
+  return null;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,7 +36,13 @@ export async function GET(request: NextRequest) {
 
   if (now - lastFetchTime < CACHE_DURATION && cachedCurrency === currency) {
     return NextResponse.json(
-      { price_per_gram: cachedPrice, currency, cached: true },
+      { 
+        price_per_gram: cachedGoldPrice, 
+        price_per_gram_gold: cachedGoldPrice, 
+        price_per_gram_silver: cachedSilverPrice, 
+        currency, 
+        cached: true 
+      },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
@@ -26,51 +54,44 @@ export async function GET(request: NextRequest) {
   const apiKey = process.env.GOLD_API_KEY;
 
   if (apiKey) {
-    try {
-      const res = await fetch(`https://www.goldapi.io/api/XAU/${currency}`, {
-        headers: { 
-          'x-access-token': apiKey,
-        },
-        next: { revalidate: 3600 },
-      });
+    const [goldPrice, silverPrice] = await Promise.all([
+      fetchMetalPrice('XAU', currency, apiKey),
+      fetchMetalPrice('XAG', currency, apiKey),
+    ]);
 
-      if (res.ok) {
-        const data = await res.json();
-        // GoldAPI returns price per troy ounce; convert to grams (1 troy oz = 31.1035 g)
-        cachedPrice = data.price / 31.1035;
-        cachedCurrency = currency;
-        lastFetchTime = now;
-        return NextResponse.json(
-          {
-            price_per_gram: cachedPrice,
-            currency: cachedCurrency,
-            cached: false,
-            last_updated: new Date(lastFetchTime).toISOString(),
+    if (goldPrice !== null || silverPrice !== null) {
+      if (goldPrice !== null) cachedGoldPrice = goldPrice;
+      if (silverPrice !== null) cachedSilverPrice = silverPrice;
+      cachedCurrency = currency;
+      lastFetchTime = now;
+
+      return NextResponse.json(
+        {
+          price_per_gram: cachedGoldPrice,
+          price_per_gram_gold: cachedGoldPrice,
+          price_per_gram_silver: cachedSilverPrice,
+          currency: cachedCurrency,
+          cached: false,
+          last_updated: new Date(lastFetchTime).toISOString(),
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
           },
-          {
-            headers: {
-              'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-            },
-          }
-        );
-      }
-    } catch {
-      // Fall through to cached/fallback price
+        }
+      );
     }
   }
 
-  // If we reach here, the API failed or no key is set.
-  // Instead of caching the failure for a full hour, we set the fetch time to 0
-  // or a temporary retry window so it attempts again on the next load.
-  // We'll cache for just 1 minute locally to avoid spamming on heavy failure loops.
-  
+  // Fallback behavior
   if (lastFetchTime === 0 || cachedCurrency !== currency) {
-     // Prevent absolute spam but retry soon
-     lastFetchTime = now - CACHE_DURATION + 60000; 
+    lastFetchTime = now - CACHE_DURATION + 60000;
   }
 
   return NextResponse.json({
-    price_per_gram: cachedCurrency === currency ? cachedPrice : FALLBACK_PRICE_AED, // Avoid returning wrong currency cached price
+    price_per_gram: cachedCurrency === currency ? cachedGoldPrice : FALLBACK_GOLD_PRICE_AED,
+    price_per_gram_gold: cachedCurrency === currency ? cachedGoldPrice : FALLBACK_GOLD_PRICE_AED,
+    price_per_gram_silver: cachedCurrency === currency ? cachedSilverPrice : FALLBACK_SILVER_PRICE_AED,
     currency,
     cached: true,
     last_updated: new Date(lastFetchTime).toISOString(),

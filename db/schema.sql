@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS public.users (
   zakat_inputs                JSONB,
   gold_grams                  DECIMAL     NOT NULL DEFAULT 0,
   onboarding_completed        BOOLEAN     NOT NULL DEFAULT FALSE,
+  zakat_fitr_rate_per_person  NUMERIC     NULL,
+  zakat_fitr_currency        TEXT        DEFAULT 'AED',
+  zakat_fitr_last_reviewed_at TIMESTAMPTZ NULL,
   created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -78,6 +81,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   description    TEXT,
   date           DATE        NOT NULL DEFAULT CURRENT_DATE,
   type           TEXT        NOT NULL CHECK (type IN ('income', 'expense')),
+  zakat_fitr_meta JSONB,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
