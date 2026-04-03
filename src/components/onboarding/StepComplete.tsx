@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import type { OnboardingData } from '@/types';
 
@@ -13,7 +13,7 @@ export default function StepComplete({ data }: StepCompleteProps) {
   const symbol = formatCurrency(0, data.currency).replace(/[0.,\s]/g, '');
 
   return (
-    <div className="space-y-10 flex flex-col items-center">
+    <div className="space-y-10 pt-10 flex flex-col items-center">
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -31,8 +31,8 @@ export default function StepComplete({ data }: StepCompleteProps) {
          />
          
          {/* Icon Container */}
-         <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-[#f8fafc] dark:bg-[#020617] border-[4px] border-emerald-500 shadow-lg shadow-emerald-500/10">
-           <CheckCircle2 className="h-14 w-14 text-emerald-500" />
+         <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-[#f8fafc] dark:bg-[#020617] border-[4px] border-emerald-500 shadow-xl shadow-emerald-500/20">
+           <Sparkles className="h-12 w-12 text-emerald-500" strokeWidth={2.5} />
          </div>
       </motion.div>
 
