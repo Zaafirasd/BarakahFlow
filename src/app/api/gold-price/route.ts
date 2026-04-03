@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const FALLBACK_PRICE_AED = 286.45; // Update periodically — ~24K gold per gram in AED
+const FALLBACK_PRICE_AED = 561.42; // Update periodically — ~24K gold per gram in AED
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
 let cachedPrice: number = FALLBACK_PRICE_AED;
@@ -55,8 +55,16 @@ export async function GET() {
     }
   }
 
-  // No API key or fetch failed — use last cached value (or fallback on cold start)
-  if (lastFetchTime === 0) lastFetchTime = now;
+  // If we reach here, the API failed or no key is set.
+  // Instead of caching the failure for a full hour, we set the fetch time to 0
+  // or a temporary retry window so it attempts again on the next load.
+  // We'll cache for just 1 minute locally to avoid spamming on heavy failure loops.
+  
+  if (lastFetchTime === 0) {
+     // Prevent absolute spam but retry soon
+     lastFetchTime = now - CACHE_DURATION + 60000; 
+  }
+
   return NextResponse.json({
     price_per_gram: cachedPrice,
     currency: 'AED',

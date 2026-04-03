@@ -113,7 +113,7 @@ export default function ZakatPage() {
   const [loading, setLoading] = useState(true);
   const [expandedSection, setExpandedSection] = useState<ExpandableSection>('cash');
   const [inputs, setInputs] = useState<ZakatInputs>(DEFAULT_INPUTS);
-  const [goldPrice, setGoldPrice] = useState<number>(286.45);
+  const [goldPrice, setGoldPrice] = useState<number>(561.42);
   const [storedCalculation, setStoredCalculation] = useState<StoredZakatCalculation | null>(null);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [paymentKind, setPaymentKind] = useState<PaymentKind>('mal');

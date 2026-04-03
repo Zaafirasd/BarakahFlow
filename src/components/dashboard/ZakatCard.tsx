@@ -13,7 +13,7 @@ interface ZakatCardProps {
   goldPrice?: number;
 }
 
-export default function ZakatCard({ zakatDate, balance, currency, estimate, goldValue, goldPrice = 286.45 }: ZakatCardProps) {
+export default function ZakatCard({ zakatDate, balance, currency, estimate, goldValue, goldPrice = 561.42 }: ZakatCardProps) {
   if (!zakatDate) return null;
 
   const anniversary = new Date(zakatDate);

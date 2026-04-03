@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [zakatEstimate, setZakatEstimate] = useState<number | null>(null);
-  const [goldPrice, setGoldPrice] = useState<number>(286.45);
+  const [goldPrice, setGoldPrice] = useState<number>(561.42);
   const [isGoldCached, setIsGoldCached] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [isGoldModalOpen, setIsGoldModalOpen] = useState(false);
@@ -194,7 +194,7 @@ export default function DashboardPage() {
         const budgts = (budgetResult.data || []) as Budget[];
         const blls = (billResult.data || []) as Bill[];
 
-        let gPrice = 286.45;
+        let gPrice = 561.42;
         let gCached = true;
         if (goldRes?.ok) {
           try {
