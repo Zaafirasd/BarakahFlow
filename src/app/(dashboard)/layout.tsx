@@ -24,10 +24,8 @@ export default function DashboardLayout({
   const isAddTransaction = pathname === '/add-transaction';
 
   useEffect(() => {
-    if (typeof document !== 'undefined' && !document.cookie.includes('bf_onboarding_done')) {
-      document.cookie = "bf_onboarding_done=true; path=/; max-age=31536000; SameSite=Lax";
-    }
-  }, []);
+    // Analytics page view tracking could go here
+  }, [pathname]);
 
   return (
     <div className={`min-h-screen ${isAddTransaction ? '' : 'pb-32'}`} style={isAddTransaction ? undefined : { paddingBottom: 'max(8rem, calc(6rem + env(safe-area-inset-bottom)))' }}>

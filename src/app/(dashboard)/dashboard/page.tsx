@@ -181,9 +181,16 @@ export default function DashboardPage() {
           throw new Error(firstError.message);
         }
 
+        const accs = (accountsResult.data || []) as Account[];
+
+        // Force onboarding if no active accounts exist
+        if (accs.length === 0) {
+          router.push('/onboarding');
+          return;
+        }
+
         const txns = (monthTransactionsResult.data || []) as Transaction[];
         const allTxns = (allTransactionsResult.data || []) as Transaction[];
-        const accs = (accountsResult.data || []) as Account[];
         const budgts = (budgetResult.data || []) as Budget[];
         const blls = (billResult.data || []) as Bill[];
 

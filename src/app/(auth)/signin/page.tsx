@@ -67,8 +67,12 @@ function SignInForm() {
 
       const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('onboarding_completed')
+        .select(`
+          onboarding_completed,
+          accounts(id)
+        `)
         .eq('id', user.id)
+        .eq('accounts.is_active', true)
         .maybeSingle();
 
       if (profileError) {
@@ -76,8 +80,11 @@ function SignInForm() {
         return;
       }
 
+      const hasAccounts = (profile as any)?.accounts?.length > 0;
+      const needsOnboarding = !profile?.onboarding_completed || !hasAccounts;
+
       trackEvent(METRICS.SIGNIN);
-      router.push(profile?.onboarding_completed ? '/dashboard' : '/onboarding');
+      router.push(needsOnboarding ? '/onboarding' : '/dashboard');
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
