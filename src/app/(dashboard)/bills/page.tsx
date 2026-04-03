@@ -29,6 +29,7 @@ import { sanitizeText, validateAmount } from '@/lib/utils/validation';
 import { trackEvent, METRICS } from '@/lib/utils/analytics';
 import { calculateNextDueDate, daysUntil, formatDateLabel, formatDayLabel } from '@/lib/utils/getFinancialMonth';
 import type { Bill, BillFrequency, Category, Transaction, User } from '@/types';
+import { invalidateDashboardCache } from '@/lib/utils/dashboardCache';
 
 type ExpenseCategory = Pick<Category, 'id' | 'name'>;
 
@@ -358,11 +359,15 @@ export default function BillsPage() {
     setBillForm(DEFAULT_BILL_FORM);
     setEditingBill(null);
     setToast({ message: editingBill ? 'Bill updated' : 'Bill added', tone: 'success' });
+    
+    // Invalidate dashboard cache
+    invalidateDashboardCache(user.id);
+    
     await loadBills();
   };
 
   const handleDeleteBill = async () => {
-    if (!editingBill) return;
+    if (!user || !editingBill) return;
 
     setSaving(true);
     const supabase = createClient();
@@ -379,6 +384,10 @@ export default function BillsPage() {
     setEditingBill(null);
     setConfirmDelete(false);
     setToast({ message: 'Bill deleted', tone: 'success' });
+    
+    // Invalidate dashboard cache
+    invalidateDashboardCache(user.id);
+    
     await loadBills();
   };
 
@@ -437,6 +446,10 @@ export default function BillsPage() {
     setPaySheetOpen(false);
     setPayingBill(null);
     setToast({ message: `${payingBill.name} marked as paid`, tone: 'success' });
+    
+    // Invalidate dashboard cache
+    invalidateDashboardCache(user.id);
+    
     await loadBills();
   };
 

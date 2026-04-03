@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { formatDateLabel, getFinancialMonthLabel, getFinancialMonthRange } from '@/lib/utils/getFinancialMonth';
 import type { Budget, Category, Transaction, User } from '@/types';
+import { invalidateDashboardCache } from '@/lib/utils/dashboardCache';
 
 type BudgetWithCategory = Budget & { category: Category };
 type TransactionWithCategory = Transaction & { category: Category };
@@ -325,6 +326,10 @@ export default function BudgetPage() {
     setSaving(false);
     setEditOpen(false);
     setToast({ message: 'Budgets updated', tone: 'success' });
+    
+    // Invalidate dashboard cache
+    invalidateDashboardCache(user.id);
+    
     await loadBudgetView();
   };
 

@@ -18,23 +18,13 @@ import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 
-// Module-level cache so navigating away and back doesn't re-fetch everything
-interface DashboardData {
-  user: User;
-  transactions: Transaction[];
-  allTransactions: Transaction[];
-  accounts: Account[];
-  budgets: Budget[];
-  bills: Bill[];
-  goldPrice: number;
-  isGoldCached: boolean;
-}
-let _cache: (DashboardData & { ts: number }) | null = null;
-const CACHE_TTL = 30_000; // 30 seconds
-
-export function invalidateDashboardCache() {
-  _cache = null;
-}
+import { 
+  getCachedDashboardData, 
+  setCachedDashboardData, 
+  invalidateDashboardCache,
+  updateCachedUser,
+  type DashboardData 
+} from '@/lib/utils/dashboardCache';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -57,31 +47,6 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    // Serve from cache if still fresh — avoids full re-fetch on every tab navigation
-    if (_cache && Date.now() - _cache.ts < CACHE_TTL) {
-      const c = _cache;
-      setUser(c.user);
-      setTransactions(c.transactions);
-      setAllTransactions(c.allTransactions);
-      setAccounts(c.accounts);
-      setBudgets(c.budgets);
-      setBills(c.bills);
-      setGoldPrice(c.goldPrice);
-      setIsGoldCached(c.isGoldCached);
-      // Load zakat from localStorage (always fresh, no network call needed)
-      try {
-        const stored = localStorage.getItem(getZakatStorageKey(c.user.id));
-        if (stored) {
-          const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
-          setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
-        } else {
-          setZakatEstimate(null);
-        }
-      } catch { setZakatEstimate(null); }
-      setLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
       setLoading(true);
       setError('');
@@ -97,6 +62,36 @@ export default function DashboardPage() {
           return;
         }
 
+        // 1. Check user-keyed cache first
+        const cached = getCachedDashboardData(authUser.id);
+        if (cached) {
+          setUser(cached.user);
+          setTransactions(cached.transactions);
+          setAllTransactions(cached.allTransactions);
+          setAccounts(cached.accounts);
+          setBudgets(cached.budgets);
+          setBills(cached.bills);
+          setGoldPrice(cached.goldPrice);
+          setIsGoldCached(cached.isGoldCached);
+
+          // Load zakat from localStorage (always fresh)
+          try {
+            const stored = localStorage.getItem(getZakatStorageKey(authUser.id));
+            if (stored) {
+              const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
+              setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
+            } else {
+              setZakatEstimate(null);
+            }
+          } catch {
+            setZakatEstimate(null);
+          }
+
+          setLoading(false);
+          return;
+        }
+
+        // 2. Cache miss -> Fetch all data from DB
         const { data: profile, error: profileError } = await supabase
           .from('users')
           .select('*')
@@ -126,7 +121,9 @@ export default function DashboardPage() {
           } else {
             setZakatEstimate(null);
           }
-        } catch { setZakatEstimate(null); }
+        } catch {
+          setZakatEstimate(null);
+        }
 
         const { start, end } = getFinancialMonthRange(profile.financial_month_start_day);
 
@@ -198,12 +195,14 @@ export default function DashboardPage() {
         let gCached = true;
         if (goldRes?.ok) {
           try {
-            const goldData = await goldRes.json() as { price_per_gram?: number; cached?: boolean };
+            const goldData = (await goldRes.json()) as { price_per_gram?: number; cached?: boolean };
             if (goldData.price_per_gram) {
               gPrice = goldData.price_per_gram;
               gCached = Boolean(goldData.cached);
             }
-          } catch { /* use default */ }
+          } catch {
+            /* use default */
+          }
         }
 
         setTransactions(txns);
@@ -215,7 +214,7 @@ export default function DashboardPage() {
         setIsGoldCached(gCached);
 
         // Cache results for fast return navigation
-        _cache = {
+        setCachedDashboardData(authUser.id, {
           user: userWithGold,
           transactions: txns,
           allTransactions: allTxns,
@@ -224,8 +223,7 @@ export default function DashboardPage() {
           bills: blls,
           goldPrice: gPrice,
           isGoldCached: gCached,
-          ts: Date.now(),
-        };
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load your dashboard right now.');
       } finally {
@@ -362,7 +360,7 @@ export default function DashboardPage() {
               const updated = { ...user, gold_grams: newGrams };
               setUser(updated);
               // Keep cache in sync so the update survives navigation
-              if (_cache) _cache = { ..._cache, user: updated };
+              updateCachedUser(user.id, updated);
             }
           }}
         />

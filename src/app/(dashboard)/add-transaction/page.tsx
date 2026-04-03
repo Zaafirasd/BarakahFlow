@@ -13,6 +13,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 import type { Category, User } from '@/types';
 import LucideIcon from '@/components/ui/LucideIcon';
+import { invalidateDashboardCache } from '@/lib/utils/dashboardCache';
 
 export default function AddTransactionPage() {
   const router = useRouter();
@@ -125,6 +126,9 @@ export default function AddTransactionPage() {
         throw new Error(insertError.message);
       }
 
+      // Invalidate the dashboard cache so it re-fetches the new data
+      invalidateDashboardCache(authUser.id);
+      
       trackEvent(METRICS.TRANSACTION_ADDED);
       setSuccess(true);
       setTimeout(() => router.back(), 1200);

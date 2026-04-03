@@ -17,6 +17,7 @@ import { formatDateLabel, formatDayLabel } from '@/lib/utils/getFinancialMonth';
 import { sanitizeText, validateAmount, validateEmail } from '@/lib/utils/validation';
 import { getZakatStorageKey } from '@/lib/utils/zakat';
 import type { Category, User } from '@/types';
+import { invalidateDashboardCache } from '@/lib/utils/dashboardCache';
 
 type BudgetWithCategory = { amount: number; category?: Pick<Category, 'name'> | Pick<Category, 'name'>[] | null };
 type ActiveSheet =
@@ -180,6 +181,10 @@ export default function ProfilePage() {
 
     setUser((current) => (current ? ({ ...current, ...updates } as User) : current));
     setToast({ message: successMessage, tone: 'success' });
+    
+    // Invalidate dashboard cache for this user
+    invalidateDashboardCache(user.id);
+    
     return true;
   };
 
@@ -351,6 +356,9 @@ export default function ProfilePage() {
   };
 
   const handleSignOut = async () => {
+    // Invalidate ALL dashboard caches on sign out for safety
+    invalidateDashboardCache();
+    
     const supabase = createClient();
     await supabase.auth.signOut();
     document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -383,6 +391,10 @@ export default function ProfilePage() {
 
       // Force signout client-side and redirect
       const supabase = createClient();
+      
+      // Invalidate dashboard cache
+      invalidateDashboardCache(user.id);
+      
       await supabase.auth.signOut();
       document.cookie = 'bf_onboarding_done=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       router.replace('/signin');
