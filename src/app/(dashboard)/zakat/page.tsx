@@ -12,7 +12,7 @@ import Toast from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { sanitizeText, validateAmount } from '@/lib/utils/validation';
-import { calculateAccountsTotal, getNextAnniversary, getZakatStorageKey } from '@/lib/utils/zakat';
+import { calculateAccountsTotal, getNextAnniversary, isHaulComplete, getZakatStorageKey } from '@/lib/utils/zakat';
 import { calculateZakat, calculateNisab, type ZakatInputs as NewZakatInputs } from '@/lib/zakat/calculations';
 import { GOLD_NISAB_GRAMS, SILVER_NISAB_GRAMS, DEFAULT_ZAKAT_AL_FITR_RATE_AED, type NisabBasis } from '@/lib/zakat/constants';
 import type { Account, Category, Transaction, User } from '@/types';
@@ -278,6 +278,7 @@ export default function ZakatPage() {
   }, [cashAndBankBalance, inputs, nisabValue, nisabBasis]);
 
   const nextAnniversary = useMemo(() => getNextAnniversary(user?.zakat_anniversary_date || null), [user?.zakat_anniversary_date]);
+  const isHaulDue = useMemo(() => isHaulComplete(user?.zakat_anniversary_date || null), [user?.zakat_anniversary_date]);
   
   const paymentHistory = useMemo(
     () =>
@@ -337,12 +338,19 @@ export default function ZakatPage() {
   };
 
   const openPaymentSheet = (kind: PaymentKind) => {
+    // If logging Zakat Al-Mal but Haul is not complete/due, warn the user.
+    if (kind === 'mal' && !isHaulDue && calculatedResult.isAboveNisab) {
+      if (!window.confirm('Your Zakat anniversary has not yet been reached. Would you like to log this as an advance payment?')) {
+        return;
+      }
+    }
+
     setPaymentKind(kind);
     setPaymentForm({
       amount: kind === 'mal' ? String(storedCalculation?.result.zakatDue || calculatedResult.zakatDue || 0) : String(fitrTotal),
       recipient: '',
       date: new Date().toISOString().split('T')[0],
-      notes: '',
+      notes: kind === 'mal' && !isHaulDue ? 'Advance Zakat Payment' : '',
     });
     setPaymentErrors({});
     setPaymentSheetOpen(true);
@@ -478,8 +486,18 @@ export default function ZakatPage() {
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                    <div className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-slate-500">
-                      {nextAnniversary ? `${nextAnniversary.daysUntil} days left` : 'Set Anniversary'}
+                      {!user.zakat_anniversary_date ? 'Set Anniversary in Profile' : (isHaulDue ? 'Haul Complete' : `${nextAnniversary?.daysUntil} days left`)}
                    </div>
+                   {calculatedResult.isAboveNisab && isHaulDue && (
+                     <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-[11px] font-bold text-emerald-500 border border-emerald-500/20">
+                        Eligible Now
+                     </div>
+                   )}
+                   {calculatedResult.isAboveNisab && !isHaulDue && user.zakat_anniversary_date && (
+                     <div className="px-3 py-1.5 rounded-full bg-amber-500/10 text-[11px] font-bold text-amber-500 border border-amber-500/20">
+                        Haul Incomplete
+                     </div>
+                   )}
                    {storedCalculation && (
                      <div className="px-3 py-1.5 rounded-full bg-emerald-500/5 text-[11px] font-bold text-emerald-500 border border-emerald-500/10">
                         Cloud Synced

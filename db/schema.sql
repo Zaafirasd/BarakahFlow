@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   zakat_fitr_rate_per_person  NUMERIC     NULL,
   zakat_fitr_currency        TEXT        DEFAULT 'AED',
   zakat_fitr_last_reviewed_at TIMESTAMPTZ NULL,
+  is_admin                    BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

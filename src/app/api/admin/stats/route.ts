@@ -21,12 +21,33 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // 1. Check database for admin role
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    let isAdmin = profile?.is_admin || false;
+
+    // 2. Transition/Sync Logic: Auto-promote if user is in the ADMIN_EMAILS allowlist
     const adminEmails = getAdminEmails();
-    if (adminEmails.length === 0) {
-      return NextResponse.json({ error: 'Admin access is not configured' }, { status: 503 });
+    const isEmailInAllowlist = adminEmails.includes(user.email.toLowerCase());
+
+    if (isEmailInAllowlist && !isAdmin) {
+      // Use service role to promote the user
+      const adminClient = createAdminClient();
+      await adminClient
+        .from('users')
+        .update({ is_admin: true })
+        .eq('id', user.id);
+      
+      isAdmin = true;
+      console.log(`Security: Auto-promoted ${user.email} to admin status via allowlist.`);
     }
 
-    if (!adminEmails.includes(user.email.toLowerCase())) {
+    // 3. Final Authorization Check
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

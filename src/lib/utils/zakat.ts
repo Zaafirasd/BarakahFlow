@@ -66,3 +66,19 @@ export function getNextAnniversary(anniversaryDate: string | null, referenceDate
     daysUntil: Math.ceil(diff / (1000 * 60 * 60 * 24)),
   };
 }
+
+export function isHaulComplete(anniversaryDate: string | null, referenceDate: Date = new Date()): boolean {
+  if (!anniversaryDate) return false;
+  
+  const base = new Date(anniversaryDate);
+  if (Number.isNaN(base.getTime())) return false;
+
+  const today = new Date(referenceDate);
+  today.setHours(0, 0, 0, 0);
+
+  const thisYearAnniversary = new Date(base);
+  thisYearAnniversary.setFullYear(today.getFullYear());
+  thisYearAnniversary.setHours(0, 0, 0, 0);
+
+  return today >= thisYearAnniversary;
+}
