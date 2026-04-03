@@ -167,7 +167,7 @@ export default function DashboardPage() {
             .eq('is_active', true)
             .order('next_due_date', { ascending: true })
             .limit(3),
-          fetch('/api/gold-price').catch(() => null),
+          fetch(`/api/gold-price?currency=${profile.primary_currency || 'AED'}`).catch(() => null),
         ]);
 
         const firstError =

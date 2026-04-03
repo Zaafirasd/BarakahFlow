@@ -195,8 +195,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-GRANT EXECUTE ON FUNCTION public.increment_metric(TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.increment_metric(TEXT) TO anon;
+REVOKE ALL ON FUNCTION public.increment_metric(TEXT) FROM public;
 
 -- =============================================
 -- FUNCTION: pay_bill (atomic bill payment)
@@ -216,6 +215,10 @@ BEGIN
 
   IF v_user_id IS NULL OR v_user_id != auth.uid() THEN
     RAISE EXCEPTION 'Unauthorized or Bill not found';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM public.accounts WHERE id = p_account_id AND user_id = auth.uid()) THEN
+    RAISE EXCEPTION 'Unauthorized account access';
   END IF;
 
   INSERT INTO public.transactions (
