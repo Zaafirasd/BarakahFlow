@@ -594,7 +594,14 @@ export default function ProfilePage() {
           }
         >
           <div className="space-y-4">
-            <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Choose the date BarakahFlow should use for your annual Zakat reminder.</p>
+            <div className="rounded-[1.6rem] bg-emerald-50 p-4 dark:bg-emerald-500/10 border border-emerald-500/10">
+               <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                 Zakat (Al-Mal) is due one lunar year after your wealth crosses the Nisab threshold. 
+                 <br /><br />
+                 If you are unsure of the exact date, many choose a specific day in <b>Ramadan</b> for their annual calculation.
+               </p>
+            </div>
+            <p className="px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Choose the date BarakahFlow should use for your annual Zakat reminder.</p>
             <input
               type="date"
               value={zakatDateDraft}
@@ -632,12 +639,21 @@ export default function ProfilePage() {
             </Button>
           }
         >
-          <input
-            type="date"
-            value={zakatDateDraft}
-            onChange={(event) => setZakatDateDraft(event.target.value)}
-            className="w-full rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark] transition-all"
-          />
+          <div className="space-y-4">
+            <div className="rounded-[1.6rem] bg-emerald-50 p-4 dark:bg-emerald-500/10 border border-emerald-500/10">
+               <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                 While Zakat follows a lunar cycle, many scholars allow choosing a specific month like <b>Ramadan</b> for ease. 
+                 <br /><br />
+                 Payments made before this date are simply considered advance Zakat payments.
+               </p>
+            </div>
+            <input
+              type="date"
+              value={zakatDateDraft}
+              onChange={(event) => setZakatDateDraft(event.target.value)}
+              className="w-full rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 [color-scheme:light] dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark] transition-all"
+            />
+          </div>
         </BottomSheet>
 
         <BottomSheet
