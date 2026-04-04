@@ -10,7 +10,6 @@ import { calculateAccountsTotal, getZakatStorageKey } from '@/lib/utils/zakat';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import BudgetCard from '@/components/dashboard/BudgetCard';
 import BillsCard from '@/components/dashboard/BillsCard';
-import ZakatCard from '@/components/dashboard/ZakatCard';
 import GoldCard from '@/components/dashboard/GoldCard';
 import GoldModal from '@/components/dashboard/GoldModal';
 import type { Account, User, Transaction, Budget, Bill } from '@/types';
@@ -35,7 +34,6 @@ export default function DashboardPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
-  const [zakatEstimate, setZakatEstimate] = useState<number | null>(null);
   const [goldPrice, setGoldPrice] = useState<number>(561.42);
   const [isGoldCached, setIsGoldCached] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
@@ -74,19 +72,6 @@ export default function DashboardPage() {
           setGoldPrice(cached.goldPrice);
           setIsGoldCached(cached.isGoldCached);
 
-          // Load zakat from localStorage (always fresh)
-          try {
-            const stored = localStorage.getItem(getZakatStorageKey(authUser.id));
-            if (stored) {
-              const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
-              setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
-            } else {
-              setZakatEstimate(null);
-            }
-          } catch {
-            setZakatEstimate(null);
-          }
-
           setLoading(false);
           return;
         }
@@ -111,19 +96,6 @@ export default function DashboardPage() {
 
         const userWithGold: User = { ...profile, gold_grams: profile.gold_grams || localGold };
         setUser(userWithGold);
-
-        // Load zakat estimate from localStorage (no network needed)
-        try {
-          const stored = localStorage.getItem(getZakatStorageKey(profile.id));
-          if (stored) {
-            const parsed = JSON.parse(stored) as { result?: { zakatDue?: number } };
-            setZakatEstimate(typeof parsed.result?.zakatDue === 'number' ? parsed.result.zakatDue : null);
-          } else {
-            setZakatEstimate(null);
-          }
-        } catch {
-          setZakatEstimate(null);
-        }
 
         const { start, end } = getFinancialMonthRange(profile.financial_month_start_day);
 
@@ -334,21 +306,6 @@ export default function DashboardPage() {
                 onManage={handleOpenGoldModal}
               />
             </StaggerItem>
-
-            {user?.zakat_enabled && (
-              <StaggerItem>
-                <button type="button" onClick={() => router.push('/zakat')} className="group block w-full text-left">
-                  <ZakatCard
-                    zakatDate={user.zakat_anniversary_date}
-                    balance={totalBalance}
-                    currency={user.primary_currency || 'AED'}
-                    estimate={zakatEstimate}
-                    goldValue={goldValue}
-                    goldPrice={goldPrice}
-                  />
-                </button>
-              </StaggerItem>
-            )}
           </StaggerContainer>
         </div>
 

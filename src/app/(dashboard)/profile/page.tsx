@@ -455,6 +455,7 @@ export default function ProfilePage() {
             />
           </SettingsSection>
 
+{/* 
           <SettingsSection title="Islamic Finance">
             <SettingsRow
               label="Zakat Tracking"
@@ -472,6 +473,7 @@ export default function ProfilePage() {
               onClick={() => setActiveSheet('zakatDate')}
             />
           </SettingsSection>
+          */}
 
           <SettingsSection title="Account">
             <SettingsRow label="Change Password" onClick={() => setActiveSheet('password')} />

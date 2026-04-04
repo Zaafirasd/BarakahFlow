@@ -10,7 +10,6 @@ import { createClient } from '@/lib/supabase/client';
 
 const menuItems = [
   { label: 'Bills', href: '/bills', icon: ReceiptText },
-  { label: 'Zakat', href: '/zakat', icon: MoonStar },
   { label: 'Profile', href: '/profile', icon: UserRound },
   { label: 'Privacy Policy', href: '/privacy-policy', icon: Shield },
 ];
