@@ -230,6 +230,7 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
     <PageTransition>
       <div className="relative min-h-screen overflow-hidden px-5 pb-32 pt-[var(--pt-safe)]">
         <div className="absolute inset-x-0 top-0 h-[28rem] rounded-b-[3.5rem] bg-gradient-to-br from-rose-200/90 via-violet-200/80 to-sky-200/70 dark:from-rose-400/20 dark:via-indigo-500/15 dark:to-sky-400/10" />
@@ -309,21 +310,22 @@ export default function DashboardPage() {
           </StaggerContainer>
         </div>
 
-        <GoldModal
-          isOpen={isGoldModalOpen}
-          onClose={() => setIsGoldModalOpen(false)}
-          currentGrams={user?.gold_grams || 0}
-          userId={user?.id || ''}
-          onUpdate={(newGrams) => {
-            if (user) {
-              const updated = { ...user, gold_grams: newGrams };
-              setUser(updated);
-              // Keep cache in sync so the update survives navigation
-              updateCachedUser(user.id, updated);
-            }
-          }}
-        />
       </div>
     </PageTransition>
+
+    <GoldModal
+      isOpen={isGoldModalOpen}
+      onClose={() => setIsGoldModalOpen(false)}
+      currentGrams={user?.gold_grams || 0}
+      userId={user?.id || ''}
+      onUpdate={(newGrams) => {
+        if (user) {
+          const updated = { ...user, gold_grams: newGrams };
+          setUser(updated);
+          updateCachedUser(user.id, updated);
+        }
+      }}
+    />
+  </>
   );
 }

@@ -18,6 +18,17 @@ export default function GoldModal({ isOpen, onClose, currentGrams, onUpdate, use
   const [grams, setGrams] = useState(currentGrams.toString());
   const [saving, setSaving] = useState(false);
 
+  // Lock body scroll when the modal is open to prevent background scrolling
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      }
+    }
+  }, [isOpen]);
+
   // Sync state when currentGrams changes (e.g. when modal opens)
   useEffect(() => {
     setGrams(currentGrams.toString());
@@ -64,13 +75,13 @@ export default function GoldModal({ isOpen, onClose, currentGrams, onUpdate, use
           />
           
           {/* Modal Container */}
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-6 sm:p-4 pointer-events-none overflow-y-auto overscroll-none bg-black/5 dark:bg-transparent">
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-sm rounded-[2rem] bg-white p-7 shadow-2xl pointer-events-auto dark:bg-slate-900 border border-slate-200 dark:border-white/10 overflow-hidden h-fit"
+              className="relative w-full max-w-sm rounded-[2.5rem] bg-white p-8 shadow-2xl pointer-events-auto dark:bg-slate-900 border border-slate-200 dark:border-white/10 overflow-hidden h-fit my-auto"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
