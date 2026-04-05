@@ -391,11 +391,11 @@ CREATE TABLE IF NOT EXISTS public.zakat_calculations (
 );
 
 ALTER TABLE public.zakat_calculations ENABLE ROW LEVEL SECURITY;
-DO $'$' BEGIN
+DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'zakat_calculations' AND policyname = 'Users can manage own zakat calculations') THEN
     CREATE POLICY "Users can manage own zakat calculations" ON public.zakat_calculations
       FOR ALL
       USING (auth.uid() = user_id)
       WITH CHECK (auth.uid() = user_id);
   END IF;
-END $'$';
+END $$;
