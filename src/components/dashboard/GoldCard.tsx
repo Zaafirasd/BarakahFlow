@@ -10,9 +10,10 @@ interface GoldCardProps {
   pricePerGram: number | null;
   isCachedPrice?: boolean;
   onManage: () => void;
+  onZakatClick?: () => void;
 }
 
-export default function GoldCard({ grams, currency, pricePerGram, isCachedPrice, onManage }: GoldCardProps) {
+export default function GoldCard({ grams, currency, pricePerGram, isCachedPrice, onManage, onZakatClick }: GoldCardProps) {
   const totalValue = pricePerGram ? grams * pricePerGram : 0;
   const loading = pricePerGram === null;
 
@@ -74,6 +75,19 @@ export default function GoldCard({ grams, currency, pricePerGram, isCachedPrice,
           <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
             No gold holdings tracked yet.
           </p>
+        )}
+
+        {grams > 0 && onZakatClick && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onZakatClick();
+            }}
+            className="mt-1 flex w-fit items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-emerald-400 shadow-lg shadow-black/20 transition-all hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-950 dark:shadow-none"
+          >
+            <TrendingUp className="h-3 w-3" />
+            Check Zakat Due
+          </button>
         )}
       </div>
     </div>

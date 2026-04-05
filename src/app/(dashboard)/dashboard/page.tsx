@@ -305,6 +305,7 @@ export default function DashboardPage() {
                 pricePerGram={goldPrice}
                 isCachedPrice={isGoldCached}
                 onManage={handleOpenGoldModal}
+                onZakatClick={() => router.push('/zakat?section=gold')}
               />
             </StaggerItem>
           </StaggerContainer>

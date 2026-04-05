@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -52,13 +53,33 @@ function AccordionSection({ title, isOpen, onToggle, children }: AccordionSectio
 }
 
 export default function ZakatPage() {
-  const [user, setUser] = useState<User | null>(null);
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    }>
+      <ZakatCalculator />
+    </Suspense>
+  );
+}
+
+function ZakatCalculator() {
+  const [user, setUser] = useState<any>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchUser = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+        setUser(profile || authUser);
+      }
     };
     fetchUser();
   }, []);
@@ -85,7 +106,39 @@ export default function ZakatPage() {
   const [hawlPassed, setHawlPassed] = useState<boolean>(false);
   
   // Accordion state
-  const [openSection, setOpenSection] = useState<string | null>('cash');
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  // Handle deep linking from dashboard
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section) {
+      setOpenSection(section);
+    } else {
+      setOpenSection('cash');
+    }
+  }, [searchParams]);
+
+  // Fetch Live Prices
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const currency = user?.primary_currency || 'AED';
+        const res = await fetch(`/api/gold-price?currency=${currency}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.price_per_gram_gold) {
+            setGoldPricePerGram(data.price_per_gram_gold);
+          }
+          if (data.price_per_gram_silver) {
+            setSilverPricePerGram(data.price_per_gram_silver);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch live prices:', err);
+      }
+    };
+    fetchPrices();
+  }, [user?.primary_currency]);
   
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' | 'info' }>({ message: '', tone: 'success' });
@@ -115,6 +168,11 @@ export default function ZakatPage() {
       const total = opening + txns;
       if (total > 0) {
         setCashBalance(total);
+      }
+      
+      // Pre-fill gold weight if user has it
+      if (user?.gold_grams) {
+        setGoldWeight(user.gold_grams);
       }
     };
     fetchBalance();
