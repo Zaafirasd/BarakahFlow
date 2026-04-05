@@ -6,7 +6,6 @@ import { Moon, SunMedium } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import { getFinancialMonthRange } from '@/lib/utils/getFinancialMonth';
-import { calculateAccountsTotal, getZakatStorageKey } from '@/lib/utils/zakat';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import BudgetCard from '@/components/dashboard/BudgetCard';
 import BillsCard from '@/components/dashboard/BillsCard';
@@ -213,10 +212,11 @@ export default function DashboardPage() {
     day: 'numeric',
   }), []);
 
-  const totalBalance = useMemo(
-    () => calculateAccountsTotal(accounts, allTransactions),
-    [accounts, allTransactions]
-  );
+  const totalBalance = useMemo(() => {
+    const opening = accounts.reduce((sum, a) => sum + Number(a.opening_balance || 0), 0);
+    const txns = allTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    return opening + txns;
+  }, [accounts, allTransactions]);
 
   const goldValue = useMemo(
     () => (user?.gold_grams || 0) * goldPrice,

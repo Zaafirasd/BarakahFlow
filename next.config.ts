@@ -5,6 +5,9 @@ type ExtendedNextConfig = NextConfig & {
 };
 
 const nextConfig: ExtendedNextConfig = {
+  images: {
+    unoptimized: true,
+  },
   // Allow phone access in dev mode
   allowedDevOrigins: ['192.168.1.194', 'localhost:3000'],
   async headers() {

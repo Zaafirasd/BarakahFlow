@@ -376,3 +376,26 @@ FROM public.users u
 WHERE NOT EXISTS (
   SELECT 1 FROM public.accounts a WHERE a.user_id = u.id
 );
+-- =============================================
+-- TABLE: zakat_calculations
+-- =============================================
+CREATE TABLE IF NOT EXISTS public.zakat_calculations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  total_wealth numeric not null,
+  nisab_value numeric not null,
+  zakat_due numeric not null,
+  hawl_confirmed boolean default false,
+  calculation_date date not null,
+  created_at timestamptz default now()
+);
+
+ALTER TABLE public.zakat_calculations ENABLE ROW LEVEL SECURITY;
+DO $'$' BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'zakat_calculations' AND policyname = 'Users can manage own zakat calculations') THEN
+    CREATE POLICY "Users can manage own zakat calculations" ON public.zakat_calculations
+      FOR ALL
+      USING (auth.uid() = user_id)
+      WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $'$';

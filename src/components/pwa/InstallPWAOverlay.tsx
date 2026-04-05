@@ -13,13 +13,16 @@ const InstallPWAOverlay = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
     
-    // Check for standalone mode
+    // Check for Capacitor native environment
+    // @ts-ignore
+    const isCapacitorNative = !!window.Capacitor?.isNative || !!(window as any).Capacitor?.platform;
+    
+    // Check for standalone mode (PWA)
     // @ts-ignore
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
 
-    // Show overlay only on iOS mobile browsers if not standalone
-    // We only force this on iOS as it's a key requirement for the premium full-screen experience
-    if (isIOSDevice && !isStandalone) {
+    // Show overlay only on iOS mobile browsers if NOT standalone and NOT running as a native app
+    if (isIOSDevice && !isStandalone && !isCapacitorNative) {
       setShowOverlay(true);
     }
   }, []);

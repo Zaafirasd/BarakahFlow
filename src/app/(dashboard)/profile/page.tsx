@@ -15,7 +15,6 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { formatDateLabel, formatDayLabel } from '@/lib/utils/getFinancialMonth';
 import { sanitizeText, validateAmount, validateEmail } from '@/lib/utils/validation';
-import { getZakatStorageKey } from '@/lib/utils/zakat';
 import type { Category, User } from '@/types';
 import { invalidateDashboardCache } from '@/lib/utils/dashboardCache';
 
@@ -386,7 +385,7 @@ export default function ProfilePage() {
       }
 
       if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(getZakatStorageKey(user.id));
+        window.localStorage.removeItem(`barakahflow_zakat_${user.id}`);
       }
 
       // Force signout client-side and redirect
