@@ -9,6 +9,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { createClient } from '@/lib/supabase/client';
 
 const menuItems = [
+  { label: 'Zakat Calculator', href: '/zakat', icon: MoonStar },
   { label: 'Bills', href: '/bills', icon: ReceiptText },
   { label: 'Profile', href: '/profile', icon: UserRound },
   { label: 'Privacy Policy', href: '/privacy-policy', icon: Shield },
